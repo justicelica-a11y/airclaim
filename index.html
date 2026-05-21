@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AirClaim — 國航行李結算系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ── 改為明亮主題顏色 ── */
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --surface3: #f1f5f9;
+    --border: #e2e8f0;
+    --border-light: #cbd5e1;
+    
+    /* 保持點綴色，微調以適應白底 */
+    --accent: #2563eb;
+    --accent-dim: rgba(37, 99, 235, 0.08);
+    --accent-glow: rgba(37, 99, 235, 0.25);
+    --green: #10b981;
+    --green-dim: rgba(16, 185, 129, 0.1);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.1);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.1);
+    
+    /* 文字顏色改為深色系 */
+    --text-1: #0f172a;
+    --text-2: #475569;
+    --text-3: #64748b;
+    
+    --mono: 'DM Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'DM Sans', sans-serif;
+    --r: 8px;
+    --r-lg: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; }
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--sans); font-size: 14px; letter-spacing: .02em;
+    color: var(--text-1); font-weight: 600;
+  }
+  .logo img {
+    height: 24px;
+    object-fit: contain;
+  }
+  .topbar-meta {
+    display: flex; align-items: center; gap: 16px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-3);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 6px var(--green); display: inline-block; margin-right: 5px;
+  }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-icon {
+    width: 30px; height: 30px; border-radius: var(--r);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .btn-icon:hover { background: var(--surface3); color: var(--text-1); border-color: var(--border-light); }
+  .btn-icon svg { width: 14px; height: 14px; }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex; flex: 1; overflow: hidden; height: calc(100vh - 52px);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 6px; }
+  .sidebar-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    color: var(--text-3); text-transform: uppercase;
+    padding: 0 16px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px; cursor: pointer;
+    font-size: 13px; color: var(--text-2);
+    border-left: 2px solid transparent;
+    transition: all .12s; border-radius: 0;
+    user-select: none;
+  }
+  .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .nav-item:hover { color: var(--text-1); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent); border-left-color: var(--accent);
+    background: var(--accent-dim); font-weight: 500;
+  }
+  .nav-badge {
+    margin-left: auto; background: var(--accent-dim); color: var(--accent);
+    font-family: var(--mono); font-size: 10px; padding: 1px 6px;
+    border-radius: 20px; border: 1px solid var(--accent-glow);
+  }
+  .sidebar-divider {
+    height: 1px; background: var(--border); margin: 8px 16px 14px;
+  }
+  .stat-block {
+    margin: 0 12px 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 10px 12px;
+  }
+  .stat-block-label { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+  .stat-block-val {
+    font-family: var(--mono); font-size: 18px; color: var(--text-1); font-weight: 500;
+  }
+  .stat-block-val span { font-size: 11px; color: var(--text-3); margin-left: 2px; }
+
+  /* ── Main ── */
+  .main {
+    flex: 1; overflow-y: auto; padding: 24px 28px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  /* ── Page sections ── */
+  .page { display: none; flex-direction: column; gap: 20px; }
+  .page.active { display: flex; }
+
+  /* ── Section headers ── */
+  .page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 1px solid var(--border); padding-bottom: 14px;
+  }
+  .page-title {
+    font-family: var(--serif); font-size: 24px; font-style: italic;
+    color: var(--text-1); line-height: 1;
+  }
+  .page-sub { font-size: 12px; color: var(--text-3); margin-top: 4px; font-family: var(--mono); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--r);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: none; transition: all .15s; font-family: var(--sans);
+  }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-ghost { background: var(--surface2); color: var(--text-2); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text-1); border-color: var(--border-light); background: var(--surface3); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: #047857; }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 500; color: var(--text-2);
+    font-family: var(--mono); letter-spacing: .03em;
+  }
+  .card-header-actions { display: flex; gap: 6px; }
+
+  /* ── KPI row ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 16px;
+    position: relative; overflow: hidden; cursor: pointer;
+    transition: border-color .15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .kpi:hover { border-color: var(--border-light); }
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .kpi.blue::before { background: var(--accent); }
+  .kpi.green::before { background: var(--green); }
+  .kpi.amber::before { background: var(--amber); }
+  .kpi.red::before { background: var(--red); }
+  .kpi-label { font-size: 11px; color: var(--text-3); margin-bottom: 8px; font-family: var(--mono); }
+  .kpi-val { font-family: var(--mono); font-size: 24px; font-weight: 500; color: var(--text-1); }
+  .kpi-val span { font-size: 12px; color: var(--text-3); margin-left: 3px; }
+  .kpi-delta { font-size: 11px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+  .kpi-delta.up { color: var(--green); }
+  .kpi-delta.down { color: var(--red); }
+
+  /* ── Table ── */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; font-weight: 500; color: var(--text-3);
+    font-family: var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    background: var(--surface2);
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s; cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 10px 14px; font-size: 12.5px; color: var(--text-2); }
+  td.mono { font-family: var(--mono); font-size: 12px; }
+  td.primary { color: var(--text-1); font-weight: 500; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 20px; font-size: 11px;
+    font-family: var(--mono); font-weight: 500; border: 1px solid;
+  }
+  .badge.open { color: var(--amber); background: var(--amber-dim); border-color: rgba(245,158,11,.25); }
+  .badge.closed { color: var(--green); background: var(--green-dim); border-color: rgba(16,185,129,.25); }
+  .badge.pending { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-glow); }
+  .badge.rejected { color: var(--red); background: var(--red-dim); border-color: rgba(239,68,68,.25); }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* ── Forms ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.cols-1 { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.span-2 { grid-column: span 2; }
+  .field.span-3 { grid-column: span 3; }
+  label {
+    font-size: 11px; color: var(--text-3); font-family: var(--mono);
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  input[type=text], input[type=date], input[type=email], input[type=number], select, textarea {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text-1); font-size: 13px;
+    padding: 8px 11px; font-family: var(--sans); width: 100%;
+    outline: none; transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: var(--text-3); }
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* ── WORLD TRACER panel ── */
+  .tracer-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 16px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .tracer-id-row { display: flex; gap: 8px; align-items: center; }
+  .tracer-id-row input { flex: 1; font-family: var(--mono); font-size: 13px; text-transform: uppercase; }
+  .tracer-result {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 12px; display: none;
+  }
+  .tracer-result.visible { display: block; }
+  .tracer-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .tracer-meta-item { }
+  .tracer-meta-label { font-size: 10px; color: var(--text-3); font-family: var(--mono); margin-bottom: 2px; }
+  .tracer-meta-val { font-size: 13px; color: var(--text-1); font-family: var(--mono); }
+  .tracer-timeline { margin-top: 12px; }
+  .timeline-item { display: flex; gap: 10px; padding-bottom: 10px; position: relative; }
+  .timeline-item:not(:last-child)::before {
+    content: ''; position: absolute; left: 5px; top: 16px;
+    width: 1px; height: calc(100% - 6px); background: var(--border);
+  }
+  .timeline-dot {
+    width: 11px; height: 11px; border-radius: 50%; background: var(--surface3);
+    border: 2px solid var(--border-light); flex-shrink: 0; margin-top: 3px;
+  }
+  .timeline-dot.active { background: var(--accent); border-color: var(--accent); }
+  .timeline-text { font-size: 12px; color: var(--text-2); }
+  .timeline-time { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+
+  /* ── File upload ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border-light);
+    border-radius: var(--r-lg); padding: 28px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    cursor: pointer; transition: all .2s; background: var(--surface2);
+    position: relative; text-align: center;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { width: 36px; height: 36px; background: var(--surface); border-radius: 10px;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; }
+  .upload-icon svg { width: 18px; height: 18px; color: var(--text-2); }
+  .upload-title { font-size: 13px; font-weight: 500; color: var(--text-1); }
+  .upload-sub { font-size: 11px; color: var(--text-3); }
+  .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .file-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 8px 12px;
+  }
+  .file-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .file-icon.pdf { background: rgba(239,68,68,.15); color: var(--red); }
+  .file-icon.img { background: rgba(59,130,246,.15); color: var(--accent); }
+  .file-icon svg { width: 14px; height: 14px; }
+  .file-name { flex: 1; font-size: 12px; color: var(--text-1); font-family: var(--mono); }
+  .file-size { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+  .file-remove { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 2px; line-height: 1; }
+  .file-remove:hover { color: var(--red); }
+
+  /* ── Compensation form ── */
+  .comp-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; padding: 0 16px 12px; }
+  .comp-total { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px; align-items: center; }
+  .comp-total-label { font-size: 12px; color: var(--text-3); }
+  .comp-total-val { font-family: var(--mono); font-size: 20px; color: var(--text-1); font-weight: 500; }
+
+  /* ── Detail drawer ── */
+  .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+    z-index: 200; display: none; backdrop-filter: blur(2px);
+  }
+  .drawer-overlay.open { display: block; }
+  .drawer {
+    position: fixed; right: 0; top: 0; bottom: 0; width: 480px;
+    background: var(--surface); border-left: 1px solid var(--border);
+    z-index: 201; display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.05);
+  }
+  .drawer.open { transform: none; }
+  .drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .drawer-title { font-family: var(--serif); font-size: 18px; font-style: italic; color: var(--text-1); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .drawer-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── Settlement timeline ── */
+  .settlement-step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 500; flex-shrink: 0;
+  }
+  .step-num.done { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+  .step-num.active { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-glow); }
+  .step-num.todo { background: var(--surface2); color: var(--text-3); border: 1px solid var(--border); }
+  .step-info { flex: 1; }
+  .step-name { font-size: 13px; color: var(--text-1); margin-bottom: 2px; font-weight: 500; }
+  .step-time { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+  .step-action { flex-shrink: 0; }
+
+  /* ── Search bar ── */
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 7px 12px;
+  }
+  .search-bar svg { width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0; }
+  .search-bar input { background: none; border: none; outline: none; font-size: 13px; color: var(--text-1); flex: 1; font-family: var(--sans); }
+  .search-bar input::placeholder { color: var(--text-3); }
+
+  /* ── Toast ── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px; min-width: 280px;
+    transform: translateX(120%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
+  .toast.show { transform: none; }
+  .toast-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .toast-icon.success { background: var(--green-dim); color: var(--green); }
+  .toast-icon.error { background: var(--red-dim); color: var(--red); }
+  .toast-icon svg { width: 11px; height: 11px; }
+  .toast-msg { font-size: 12.5px; color: var(--text-1); flex: 1; }
+
+  /* ── Misc ── */
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .text-right { text-align: right; }
+  hr { border: none; border-top: 1px solid var(--border); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfrNK89DSHW9eoSIkpLiq9ry684Paw87sFBA&s" alt="logo">
+    AirClaim · 國航行李結算系統
+  </div>
+  <div class="topbar-meta">
+    <span><span class="status-dot"></span>WORLD TRACER 已連線</span>
+    <span>航站：TPE · T1</span>
+    <span id="clock" style="font-family:var(--mono);color:var(--text-2)"></span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-icon" title="通知" onclick="showToast('目前無新通知','success')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+    <button class="btn btn-ghost btn-icon" title="匯出" onclick="showToast('報表匯出中…','success')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;color:#fff;" title="登入帳號">AG</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">主要功能</div>
+      <div class="nav-item active" onclick="navigate('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        總覽儀表板
+      </div>
+      <div class="nav-item" onclick="navigate('cases',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        案件管理
+        <span class="nav-badge">12</span>
+      </div>
+      <div class="nav-item" onclick="navigate('new-case',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        新增案件
+      </div>
+      <div class="nav-item" onclick="navigate('settlement',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        財務結算
+        <span class="nav-badge">3</span>
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">工具</div>
+      <div class="nav-item" onclick="navigate('tracer',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        WORLD TRACER
+      </div>
+      <div class="nav-item" onclick="navigate('docs',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        文件管理
+      </div>
+      <div class="nav-item" onclick="navigate('reports',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        統計報表
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="stat-block">
+      <div class="stat-block-label">本月待結算</div>
+      <div class="stat-block-val">NT$148,200 <span>TWD</span></div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-block-label">開放案件</div>
+      <div class="stat-block-val">12 <span>件</span></div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">總覽儀表板</div>
+          <div class="page-sub">AIRCLAIM · BAGGAGE SETTLEMENT OVERVIEW</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="navigate('new-case',document.querySelector('.nav-item:nth-child(3)'))">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增案件
+          </button>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi blue">
+          <div class="kpi-label">本月總案件</div>
+          <div class="kpi-val">47 <span>件</span></div>
+          <div class="kpi-delta up">▲ 8 件 較上月</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label">已完成結算</div>
+          <div class="kpi-val">35 <span>件</span></div>
+          <div class="kpi-delta up">▲ 74.5% 結案率</div>
+        </div>
+        <div class="kpi amber">
+          <div class="kpi-label">待審核金額</div>
+          <div class="kpi-val">148 <span>K TWD</span></div>
+          <div class="kpi-delta down">▼ 3件 待批</div>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-label">逾期未結</div>
+          <div class="kpi-val">2 <span>件</span></div>
+          <div class="kpi-delta down">▼ 需緊急處理</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          最新案件
+          <div class="card-header-actions">
+            <button class="btn btn-ghost" style="padding:4px 10px;" onclick="navigate('cases',document.querySelectorAll('.nav-item')[1])">查看全部</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>案件編號</th>
+                <th>WORLD TRACER ID</th>
+                <th>旅客姓名</th>
+                <th>航班</th>
+                <th>類型</th>
+                <th>申請金額</th>
+                <th>狀態</th>
+                <th>日期</th>
+              </tr>
+            </thead>
+            <tbody id="recent-cases-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-cases">
+      <div class="page-header">
+        <div>
+          <div class="page-title">案件管理</div>
+          <div class="page-sub">CASE MANAGEMENT · 共 47 件</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div class="search-bar" style="width:220px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="搜尋案件、旅客、TRACER ID…" oninput="filterCases(this.value)">
+          </div>
+          <select style="padding:7px 10px;font-size:12px;" onchange="filterByStatus(this.value)">
+            <option value="">全部狀態</option>
+            <option value="open">處理中</option>
+            <option value="pending">待審核</option>
+            <option value="closed">已結案</option>
+            <option value="rejected">已拒絕</option>
+          </select>
+          <button class="btn btn-primary" onclick="navigate('new-case',document.querySelectorAll('.nav-item')[2])">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增案件
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>案件編號</th>
+                <th>WORLD TRACER ID</th>
+                <th>旅客姓名</th>
+                <th>航班</th>
+                <th>類型</th>
+                <th>申請金額</th>
+                <th>狀態</th>
+                <th>建立日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="all-cases-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-new-case">
+      <div class="page-header">
+        <div>
+          <div class="page-title">新增案件</div>
+          <div class="page-sub">NEW CLAIM CASE · 填寫旅客與行李資料</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span>🔗 WORLD TRACER 案件串聯</span>
+        </div>
+        <div style="padding:16px;">
+          <div class="tracer-box">
+            <div style="font-size:12px;color:var(--text-3);font-family:var(--mono);">輸入 WORLD TRACER 案件代碼，系統將自動帶入旅客與行李資料。</div>
+            <div class="tracer-id-row">
+              <input type="text" id="tracer-input" placeholder="例：TPECA12345" maxlength="12" style="text-transform:uppercase;letter-spacing:.1em;">
+              <button class="btn btn-primary" onclick="lookupTracer()">查詢</button>
+              <button class="btn btn-ghost" onclick="clearTracer()">清除</button>
+            </div>
+            <div class="tracer-result" id="tracer-result">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">WORLD TRACER 回傳資料</div>
+                <span class="badge pending"><span class="badge-dot"></span><span id="tracer-status-text">已找到</span></span>
+              </div>
+              <div class="tracer-meta" id="tracer-meta"></div>
+              <div class="tracer-timeline" id="tracer-timeline"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">旅客基本資料</div>
+        <div class="form-grid cols-3">
+          <div class="field">
+            <label>旅客姓名（英文）</label>
+            <input type="text" id="f-name" placeholder="CHEN/MINGHUA">
+          </div>
+          <div class="field">
+            <label>護照／身分證號</label>
+            <input type="text" id="f-id" placeholder="A123456789">
+          </div>
+          <div class="field">
+            <label>聯絡電話</label>
+            <input type="text" id="f-phone" placeholder="+886 912 345 678">
+          </div>
+          <div class="field">
+            <label>電子郵件</label>
+            <input type="email" id="f-email" placeholder="passenger@email.com">
+          </div>
+          <div class="field">
+            <label>常旅客號碼</label>
+            <input type="text" id="f-ffn" placeholder="CA1234567">
+          </div>
+          <div class="field">
+            <label>國籍</label>
+            <select id="f-nationality">
+              <option value="CN">中國 (CN)</option>
+              <option value="TW">台灣 (TW)</option>
+              <option value="US">美國 (US)</option>
+              <option value="JP">日本 (JP)</option>
+              <option value="KR">韓國 (KR)</option>
+              <option value="Other">其他</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">航班與行程資料</div>
+        <div class="form-grid cols-3">
+          <div class="field">
+            <label>航空公司代碼</label>
+            <select id="f-airline">
+              <option>CA · 中國國際航空</option>
+              <option>CI · 中華航空</option>
+              <option>BR · 長榮航空</option>
+              <option>SQ · 新加坡航空</option>
+              <option>JL · 日本航空</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>航班號碼</label>
+            <input type="text" id="f-flight" placeholder="CA-186">
+          </div>
+          <div class="field">
+            <label>事件發生日期</label>
+            <input type="date" id="f-date">
+          </div>
+          <div class="field">
+            <label>出發地（IATA）</label>
+            <input type="text" id="f-from" placeholder="TPE" maxlength="3" style="text-transform:uppercase;">
+          </div>
+          <div class="field">
+            <label>目的地（IATA）</label>
+            <input type="text" id="f-to" placeholder="PEK" maxlength="3" style="text-transform:uppercase;">
+          </div>
+          <div class="field">
+            <label>案件類型</label>
+            <select id="f-type">
+              <option value="delayed">行李延誤 (Delayed)</option>
+              <option value="damaged">行李損壞 (Damaged)</option>
+              <option value="lost">行李遺失 (Lost)</option>
+              <option value="pilferage">行李短少 (Pilferage)</option>
+            </select>
+          </div>
+          <div class="field span-3">
+            <label>事件說明</label>
+            <textarea id="f-desc" placeholder="請描述行李事件的詳細情況…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">旅客文件上傳</div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+          <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDrag(event,true)" ondragleave="handleDrag(event,false)" ondrop="handleDrop(event)">
+            <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.tiff" onchange="handleFiles(this.files)" style="display:none">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="upload-title">拖放文件至此，或點擊上傳</div>
+            <div class="upload-sub">支援 PDF、JPG、PNG、TIFF · 單檔最大 25MB</div>
+          </div>
+          <div class="file-list" id="file-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          行李賠償項目明細
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="addCompRow()">+ 新增項目</button>
+        </div>
+        <div style="padding:12px 16px 4px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;">
+          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">項目描述</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">數量</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">單價 (TWD)</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">小計</div>
+          <div></div>
+        </div>
+        <div id="comp-rows"></div>
+        <div class="comp-total">
+          <span class="comp-total-label">申請總金額</span>
+          <span class="comp-total-val" id="comp-total">NT$ 0</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="navigate('cases',document.querySelectorAll('.nav-item')[1])">取消</button>
+        <button class="btn btn-ghost" onclick="saveDraft()">儲存草稿</button>
+        <button class="btn btn-primary" onclick="submitCase()">提交案件</button>
+      </div>
+    </div>
+
+    <div class="page" id="page-settlement">
+      <div class="page-header">
+        <div>
+          <div class="page-title">財務結算</div>
+          <div class="page-sub">FINANCIAL SETTLEMENT · 3 件待批准</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="showToast('報表產生中…','success')">匯出結算報表</button>
+          <button class="btn btn-green" onclick="showToast('批量核准已送出','success')">批量核准</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">待財務審核案件</div>
+        <div id="settlement-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">案件 BC-2026-0041 · 結算進度</div>
+        <div class="settlement-step">
+          <div class="step-num done">✓</div>
+          <div class="step-info"><div class="step-name">案件建立與文件上傳</div><div class="step-time">2026-05-10 09:23</div></div>
+        </div>
+        <div class="settlement-step">
+          <div class="step-num done">✓</div>
+          <div class="step-info"><div class="step-name">WORLD TRACER 驗證完成</div><div class="step-time">2026-05-10 09:45</div></div>
+        </div>
+        <div class="settlement-step">
+          <div class="step-num done">✓</div>
+          <div class="step-info"><div class="step-name">地勤主管審核</div><div class="step-time">2026-05-11 14:00</div></div>
+        </div>
+        <div class="settlement-step">
+          <div class="step-num active">→</div>
+          <div class="step-info"><div class="step-name">財務部門審核中</div><div class="step-time">進行中</div></div>
+          <div class="step-action"><button class="btn btn-green" style="font-size:11px;padding:5px 10px;" onclick="showToast('案件 BC-2026-0041 已核准','success')">核准</button></div>
+        </div>
+        <div class="settlement-step">
+          <div class="step-num todo">5</div>
+          <div class="step-info"><div class="step-name">款項撥付旅客</div><div class="step-time">待執行</div></div>
+        </div>
+        <div class="settlement-step" style="border-bottom:none">
+          <div class="step-num todo">6</div>
+          <div class="step-info"><div class="step-name">案件結案歸檔</div><div class="step-time">待執行</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-tracer">
+      <div class="page-header">
+        <div>
+          <div class="page-title">WORLD TRACER 查詢</div>
+          <div class="page-sub">BAGGAGE TRACING SYSTEM · 全球行李追蹤</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">案件查詢</div>
+        <div style="padding:16px;">
+          <div class="tracer-box">
+            <div class="tracer-id-row">
+              <input type="text" id="tracer-input-2" placeholder="TPECA12345" maxlength="12" style="text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);font-size:14px;">
+              <button class="btn btn-primary" onclick="lookupTracer2()">查詢 WORLD TRACER</button>
+            </div>
+            <div class="tracer-result" id="tracer-result-2">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="font-family:var(--mono);font-size:13px;color:var(--text-1);" id="tracer2-id"></div>
+                <span class="badge pending"><span class="badge-dot"></span>已追蹤</span>
+              </div>
+              <div class="tracer-meta" id="tracer-meta-2"></div>
+              <div class="tracer-timeline" id="tracer-timeline-2" style="margin-top:16px;"></div>
+              <div style="margin-top:14px;display:flex;gap:8px;">
+                <button class="btn btn-primary" onclick="navigate('new-case',document.querySelectorAll('.nav-item')[2])">以此案件建立結算</button>
+                <button class="btn btn-ghost" onclick="showToast('列印中…','success')">列印追蹤記錄</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-docs">
+      <div class="page-header">
+        <div>
+          <div class="page-title">文件管理</div>
+          <div class="page-sub">DOCUMENT MANAGEMENT · 已上傳 38 份文件</div>
+        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('doc-upload-input').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          上傳文件
+          <input type="file" id="doc-upload-input" multiple style="display:none" onchange="handleDocUpload(this.files)">
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header">文件列表</div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:6px;" id="doc-list"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <div>
+          <div class="page-title">統計報表</div>
+          <div class="page-sub">ANALYTICS · 2026年05月</div>
+        </div>
+        <button class="btn btn-ghost" onclick="showToast('Excel 匯出中…','success')">匯出 Excel</button>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi blue"><div class="kpi-label">本月總賠償金額</div><div class="kpi-val">1.2M <span>TWD</span></div><div class="kpi-delta down">▼ 8% 較上月</div></div>
+        <div class="kpi green"><div class="kpi-label">平均結案天數</div><div class="kpi-val">4.3 <span>天</span></div><div class="kpi-delta up">▲ 優化 0.7天</div></div>
+        <div class="kpi amber"><div class="kpi-label">旅客滿意度</div><div class="kpi-val">4.2 <span>/5</span></div><div class="kpi-delta up">▲ 持平</div></div>
+        <div class="kpi red"><div class="kpi-label">拒賠率</div><div class="kpi-val">6.3 <span>%</span></div><div class="kpi-delta up">▼ 下降 1.2%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">案件類型分佈</div>
+        <div style="padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+          <div style="text-align:center;">
+            <div style="font-family:var(--mono);font-size:28px;color:var(--amber)">52%</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:4px;">行李延誤</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--mono);font-size:28px;color:var(--accent)">28%</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:4px;">行李損壞</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--mono);font-size:28px;color:var(--red)">13%</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:4px;">行李遺失</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--mono);font-size:28px;color:var(--green)">7%</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:4px;">行李短少</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()">
+  <div class="drawer" id="drawer" onclick="event.stopPropagation()">
+    <div class="drawer-head">
+      <div class="drawer-title" id="drawer-title">案件詳情</div>
+      <button class="btn-icon btn" onclick="closeDrawer()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+    <div class="drawer-footer">
+      <button class="btn btn-danger" onclick="closeDrawer()">關閉</button>
+      <button class="btn btn-ghost" onclick="showToast('列印中…','success');closeDrawer()">列印</button>
+      <button class="btn btn-primary" onclick="showToast('已進入編輯模式','success');closeDrawer()">編輯案件</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── Data ──
+const cases = [
+  {id:'BC-2026-0047',tracer:'TPECA18923',name:'WANG/JIAMING',flight:'CA-185',route:'PEK→TPE',type:'delayed',amount:1365,status:'open',date:'2026-05-14'},
+  {id:'BC-2026-0046',tracer:'TPECA34512',name:'LIN/SHIHHAO',flight:'CA-410',route:'CKG→TPE',type:'damaged',amount:500,status:'pending',date:'2026-05-13'},
+  {id:'BC-2026-0045',tracer:'TPECA12200',name:'CHEN/YUMEI',flight:'CA-195',route:'PVG→TPE',type:'lost',amount:2000,status:'pending',date:'2026-05-12'},
+  {id:'BC-2026-0044',tracer:'TPECA29801',name:'HUANG/ZHEN',flight:'CA-912/CA-189',route:'ARN→PEK→TPE',type:'delayed',amount:8800,status:'closed',date:'2026-05-11'},
+  {id:'BC-2026-0043',tracer:'TPECA11234',name:'KIM/SOOYEON',flight:'CA-149',route:'HGH→TPE',type:'pilferage',amount:1365,status:'rejected',date:'2026-05-10'},
+  {id:'BC-2026-0042',tracer:'TPECA30009',name:'SUZUKI/HIRO',flight:'CA-185',route:'PEK→TPE',type:'damaged',amount:1365,status:'closed',date:'2026-05-09'},
+  {id:'BC-2026-0041',tracer:'TPECA09871',name:'CHEN/MINGHUA',flight:'CA-185',route:'PEK→TPE',type:'lost',amount:4000,status:'pending',date:'2026-05-10'},
+];
+
+const typeLabel = {delayed:'行李延誤',damaged:'行李損壞',lost:'行李遺失',pilferage:'行李短少'};
+const statusLabel = {open:'處理中',pending:'待審核',closed:'已結案',rejected:'已拒絕'};
+
+const tracerDB = {
+  'TPECA12345': {
+    pax:'CHEN/MINGHUA', pnr:'ABC123', flight:'CA-186', route:'TPE→PEK',
+    date:'2026-05-10', bags:2, weight:'32kg', color:'黑色硬殼',
+    brand:'Samsonite', tag:'CA123456',
+    events:[
+      {loc:'TPE',desc:'行李報到登記',time:'2026-05-10 09:15',active:false},
+      {loc:'TPE T1',desc:'行李分揀輸送',time:'2026-05-10 09:45',active:false},
+      {loc:'PEK',desc:'抵達目的地，行李未到達',time:'2026-05-10 16:30',active:true},
+      {loc:'PEK',desc:'WORLD TRACER 案件開立',time:'2026-05-10 16:45',active:false},
+    ]
+  },
+  'TPECA18923': {
+    pax:'WANG/JIAMING', pnr:'XYZ789', flight:'CA-186', route:'TPE→PEK',
+    date:'2026-05-14', bags:1, weight:'18kg', color:'藍色軟殼',
+    brand:'Rimowa', tag:'CA987001',
+    events:[
+      {loc:'TPE',desc:'行李報到',time:'2026-05-14 07:00',active:false},
+      {loc:'PEK',desc:'行李未隨機抵達',time:'2026-05-14 14:20',active:true},
+    ]
+  }
+};
+
+const MOCK_DOCS = [
+  {name:'PIR_BC2026-0047.pdf',size:'2.3 MB',type:'pdf',case:'BC-2026-0047',date:'2026-05-14'},
+  {name:'boarding_pass_WANG.pdf',size:'340 KB',type:'pdf',case:'BC-2026-0047',date:'2026-05-14'},
+  {name:'damaged_bag_photo1.jpg',size:'1.8 MB',type:'img',case:'BC-2026-0046',date:'2026-05-13'},
+  {name:'damaged_bag_photo2.jpg',size:'2.1 MB',type:'img',case:'BC-2026-0046',date:'2026-05-13'},
+  {name:'PIR_BC2026-0045.pdf',size:'1.5 MB',type:'pdf',case:'BC-2026-0045',date:'2026-05-12'},
+];
+
+let uploadedFiles = [];
+let compRows = [];
+let allCasesFiltered = [...cases];
+
+// ── Navigation ──
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── Render cases table ──
+function renderCaseRow(c, showActions=false) {
+  const typeColors = {delayed:'amber',damaged:'blue',lost:'red',pilferage:'pending'};
+  return `<tr onclick="openDrawer('${c.id}')">
+    <td class="mono primary">${c.id}</td>
+    <td class="mono" style="color:var(--accent)">${c.tracer}</td>
+    <td class="primary">${c.name}</td>
+    <td class="mono">${c.flight} · ${c.route}</td>
+    <td><span class="badge ${typeColors[c.type]||'pending'}">${typeLabel[c.type]}</span></td>
+    <td class="mono">NT$ ${c.amount.toLocaleString()}</td>
+    <td><span class="badge ${c.status}">${statusLabel[c.status]}</span></td>
+    <td class="mono">${c.date}</td>
+    ${showActions ? `<td><button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();openDrawer('${c.id}')">詳情</button></td>` : ''}
+  </tr>`;
+}
+
+function initTables() {
+  document.getElementById('recent-cases-body').innerHTML = cases.slice(0,5).map(c=>renderCaseRow(c)).join('');
+  document.getElementById('all-cases-body').innerHTML = cases.map(c=>renderCaseRow(c,true)).join('');
+}
+
+function filterCases(q) {
+  const filtered = cases.filter(c =>
+    c.id.includes(q.toUpperCase()) || c.tracer.includes(q.toUpperCase()) || c.name.includes(q.toUpperCase())
+  );
+  document.getElementById('all-cases-body').innerHTML = filtered.map(c=>renderCaseRow(c,true)).join('');
+}
+
+function filterByStatus(s) {
+  const filtered = s ? cases.filter(c=>c.status===s) : cases;
+  document.getElementById('all-cases-body').innerHTML = filtered.map(c=>renderCaseRow(c,true)).join('');
+}
+
+// ── WORLD TRACER Lookup ──
+function buildTracerHTML(data, metaId, timelineId) {
+  const meta = document.getElementById(metaId);
+  const tl = document.getElementById(timelineId);
+  meta.innerHTML = [
+    {l:'旅客姓名',v:data.pax},{l:'PNR',v:data.pnr},{l:'航班',v:data.flight},
+    {l:'行程',v:data.route},{l:'行李件數',v:data.bags+'件'},{l:'重量',v:data.weight},
+    {l:'行李顏色',v:data.color},{l:'品牌',v:data.brand},{l:'行李標籤',v:data.tag},
+  ].map(i=>`<div class="tracer-meta-item"><div class="tracer-meta-label">${i.l}</div><div class="tracer-meta-val">${i.v}</div></div>`).join('');
+  tl.innerHTML = data.events.map(e=>`
+    <div class="timeline-item">
+      <div class="timeline-dot ${e.active?'active':''}"></div>
+      <div><div class="timeline-text">[${e.loc}] ${e.desc}</div><div class="timeline-time">${e.time}</div></div>
+    </div>`).join('');
+}
+
+function lookupTracer() {
+  const id = document.getElementById('tracer-input').value.trim().toUpperCase();
+  const result = document.getElementById('tracer-result');
+  if(!id){showToast('請輸入 WORLD TRACER 代碼','error');return;}
+  if(tracerDB[id]) {
+    buildTracerHTML(tracerDB[id],'tracer-meta','tracer-timeline');
+    result.classList.add('visible');
+    // Auto-fill form
+    const d = tracerDB[id];
+    document.getElementById('f-name').value = d.pax;
+    document.getElementById('f-flight').value = d.flight;
+    document.getElementById('f-from').value = d.route.split('→')[0];
+    document.getElementById('f-to').value = d.route.split('→')[1];
+    showToast('WORLD TRACER 資料已帶入','success');
+  } else {
+    result.classList.remove('visible');
+    showToast('找不到此 WORLD TRACER 案件','error');
+  }
+}
+
+function clearTracer() {
+  document.getElementById('tracer-input').value = '';
+  document.getElementById('tracer-result').classList.remove('visible');
+}
+
+function lookupTracer2() {
+  const id = document.getElementById('tracer-input-2').value.trim().toUpperCase();
+  const result = document.getElementById('tracer-result-2');
+  if(!id){showToast('請輸入 WORLD TRACER 代碼','error');return;}
+  if(tracerDB[id]) {
+    document.getElementById('tracer2-id').textContent = id;
+    buildTracerHTML(tracerDB[id],'tracer-meta-2','tracer-timeline-2');
+    result.classList.add('visible');
+    showToast('已找到 WORLD TRACER 紀錄','success');
+  } else {
+    result.classList.remove('visible');
+    showToast('查無此案件紀錄','error');
+  }
+}
+
+// ── File Upload ──
+function handleDrag(e, over) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.toggle('drag', over);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    uploadedFiles.push(f);
+    renderFileList();
+  });
+  showToast(`已上傳 ${files.length} 份文件`,'success');
+}
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = uploadedFiles.map((f,i) => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const isPDF = ext === 'pdf';
+    return `<div class="file-item">
+      <div class="file-icon ${isPDF?'pdf':'img'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          ${isPDF ? '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' : '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'}
+        </svg>
+      </div>
+      <div class="file-name">${f.name}</div>
+      <div class="file-size">${(f.size/1024/1024).toFixed(2)} MB</div>
+      <button class="file-remove" onclick="removeFile(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+function removeFile(i) {
+  uploadedFiles.splice(i,1);
+  renderFileList();
+}
+
+// ── Compensation Rows ──
+function addCompRow() {
+  const id = Date.now();
+  compRows.push({id});
+  const cont = document.getElementById('comp-rows');
+  const div = document.createElement('div');
+  div.className = 'comp-row'; div.id = 'row-'+id;
+  div.innerHTML = `
+    <input type="text" placeholder="例：Samsonite 行李箱損壞" oninput="calcTotal()">
+    <input type="number" value="1" min="1" oninput="calcTotal()">
+    <input type="number" value="0" min="0" placeholder="金額" oninput="calcTotal()">
+    <div class="mono" id="sub-${id}" style="padding:8px 0;color:var(--text-2);font-family:var(--mono);">NT$ 0</div>
+    <button class="btn btn-danger" style="padding:5px 8px;" onclick="removeRow(${id})">✕</button>`;
+  cont.appendChild(div);
+}
+function removeRow(id) {
+  document.getElementById('row-'+id).remove();
+  compRows = compRows.filter(r=>r.id!==id);
+  calcTotal();
+}
+function calcTotal() {
+  let total = 0;
+  document.querySelectorAll('#comp-rows .comp-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const qty = parseFloat(inputs[1]?.value)||0;
+    const price = parseFloat(inputs[2]?.value)||0;
+    const sub = qty * price;
+    total += sub;
+    const subEl = row.querySelector('[id^=sub-]');
+    if(subEl) subEl.textContent = 'NT$ '+sub.toLocaleString();
+  });
+  document.getElementById('comp-total').textContent = 'NT$ '+total.toLocaleString();
+}
+
+// ── Submit / Draft ──
+function submitCase() {
+  if(!document.getElementById('f-name').value) {showToast('請填寫旅客姓名','error');return;}
+  showToast('案件已成功提交！案號：BC-2026-0048','success');
+  setTimeout(()=>navigate('cases',document.querySelectorAll('.nav-item')[1]),1200);
+}
+function saveDraft() { showToast('草稿已儲存','success'); }
+
+// ── Settlement list ──
+function renderSettlement() {
+  const pending = cases.filter(c=>c.status==='pending');
+  document.getElementById('settlement-list').innerHTML = pending.map(c=>`
+    <div class="settlement-step">
+      <div class="step-info">
+        <div class="step-name" style="display:flex;gap:12px;align-items:center;">
+          <span class="mono" style="color:var(--accent)">${c.id}</span>
+          <span>${c.name}</span>
+          <span class="badge ${c.status}">${statusLabel[c.status]}</span>
+        </div>
+        <div class="step-time">${c.tracer} · ${c.flight} · ${c.date}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:16px;color:var(--text-1);margin-right:12px;">NT$ ${c.amount.toLocaleString()}</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-green" style="font-size:11px;padding:5px 10px;" onclick="showToast('${c.id} 已核准','success')">核准</button>
+        <button class="btn btn-danger" style="font-size:11px;padding:5px 10px;" onclick="showToast('${c.id} 已退回','error')">退回</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Doc list ──
+function renderDocs(docs) {
+  const list = document.getElementById('doc-list');
+  list.innerHTML = docs.map(d=>`
+    <div class="file-item">
+      <div class="file-icon ${d.type}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          ${d.type==='pdf' ? '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' : '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>'}
+        </svg>
+      </div>
+      <div class="file-name">${d.name}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-left:auto;">${d.case}</div>
+      <div class="file-size" style="margin-left:12px;">${d.size}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-left:12px;">${d.date}</div>
+      <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;margin-left:8px;" onclick="showToast('下載中…','success')">下載</button>
+    </div>`).join('');
+}
+
+function handleDocUpload(files) {
+  Array.from(files).forEach(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    MOCK_DOCS.unshift({name:f.name,size:(f.size/1024/1024).toFixed(2)+' MB',type:ext==='pdf'?'pdf':'img',case:'未分配',date:new Date().toISOString().slice(0,10)});
+  });
+  renderDocs(MOCK_DOCS);
+  showToast(`上傳 ${files.length} 份文件成功`,'success');
+}
+
+// ── Drawer ──
+function openDrawer(caseId) {
+  const c = cases.find(x=>x.id===caseId);
+  if(!c) return;
+  document.getElementById('drawer-title').textContent = c.id + ' · ' + c.name;
+  document.getElementById('drawer-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      ${[['WORLD TRACER ID',`<span style="color:var(--accent);font-family:var(--mono)">${c.tracer}</span>`],
+         ['航班',c.flight],['行程',c.route],['案件類型',typeLabel[c.type]],
+         ['建立日期',c.date],['狀態','<span class="badge '+c.status+'">'+statusLabel[c.status]+'</span>'],
+         ['申請金額',`<span style="font-family:var(--mono);font-size:16px;color:var(--text-1);">NT$ ${c.amount.toLocaleString()}</span>`],
+         ['旅客姓名',c.name]
+      ].map(([l,v])=>`<div><div style="font-size:10px;color:var(--text-3);font-family:var(--mono);margin-bottom:4px;">${l}</div><div style="font-size:13px;color:var(--text-1);">${v}</div></div>`).join('')}
+    </div>
+    <hr>
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">附件文件</div>
+    ${MOCK_DOCS.filter(d=>d.case===caseId).map(d=>`
+      <div class="file-item">
+        <div class="file-icon ${d.type}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="file-name">${d.name}</div>
+        <div class="file-size">${d.size}</div>
+      </div>`).join('') || '<div style="font-size:12px;color:var(--text-3);">尚無附件</div>'}
+    <hr>
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">備註</div>
+    <textarea placeholder="新增備註…" style="width:100%;min-height:80px;"></textarea>`;
+  document.getElementById('drawer-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('drawer').classList.add('open'),10);
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  setTimeout(()=>document.getElementById('drawer-overlay').classList.remove('open'),250);
+}
+
+// ── Toast ──
+function showToast(msg, type='success') {
+  const cont = document.getElementById('toast-container');
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.innerHTML = `
+    <div class="toast-icon ${type}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        ${type==='success' ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+      </svg>
+    </div>
+    <div class="toast-msg">${msg}</div>`;
+  cont.appendChild(div);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>div.classList.add('show')));
+  setTimeout(()=>{ div.classList.remove('show'); setTimeout(()=>div.remove(),350); }, 3200);
+}
+
+// ── Init ──
+initTables();
+renderSettlement();
+renderDocs(MOCK_DOCS);
+addCompRow();
+
+// Set today's date
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
