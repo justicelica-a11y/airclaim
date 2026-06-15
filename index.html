@@ -527,7 +527,7 @@
   .topbar-actions [title="待辦通知"] { order: 2; }
   .topbar-actions [title="匯出"] { order: 3; }
   .topbar-actions .currency-switcher-mobile { order: 4; }
-  .topbar-actions .user-avatar { order: 5; flex: 0 0 56px; }
+  .topbar-actions .user-avatar { order: 5; flex: 0 0 28px; }
   @media (max-width: 980px) {
     .sidebar { width: 190px; }
     .ai-layout, .data-grid, .work-queue, .fx-layout { grid-template-columns: 1fr; }
@@ -564,7 +564,7 @@
     }
     .topbar-actions .user-avatar {
       grid-column: 4; grid-row: 1; display: flex !important; justify-self: end;
-      width: 56px !important; height: 28px;
+      width: 28px !important; height: 28px;
     }
     .currency-switcher-desktop { display: none; }
     .layout { height: calc(100vh - 82px); overflow: visible; }
@@ -604,7 +604,7 @@
 
 <header class="topbar">
   <div class="logo">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfrNK89DSHW9eoSIkpLiq9ry684Paw87sFBA&amp;s" alt="logo">
+    <span class="brand-mark">AC</span>
     AirClaim · 國航行李結算系統
   </div>
   <div class="topbar-meta">
@@ -628,7 +628,7 @@
       <option value="auditor">稽核人員</option>
     </select>
     <select class="currency-switcher currency-switcher-mobile" id="display-currency-mobile" onchange="setDisplayCurrency(this.value)" title="切換顯示貨幣"></select>
-    <div class="user-avatar" style="width:28px;height:28px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;" title="登入帳號">AG</div>
+    <div class="user-avatar" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;color:#fff;" title="登入帳號">AG</div>
   </div>
 </header>
 
