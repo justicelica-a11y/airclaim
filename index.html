@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AirClaim — 國航行李結算系統</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Offline-capable system: use local fonts and no external dependencies. -->
 <style>
   :root {
     /* ── 改為明亮主題顏色 ── */
@@ -32,9 +31,9 @@
     --text-2: #475569;
     --text-3: #64748b;
     
-    --mono: 'DM Mono', monospace;
-    --serif: 'Instrument Serif', serif;
-    --sans: 'DM Sans', sans-serif;
+    --mono: 'Cascadia Mono', 'Consolas', monospace;
+    --serif: 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+    --sans: 'Microsoft JhengHei', 'Noto Sans TC', Arial, sans-serif;
     --r: 8px;
     --r-lg: 12px;
   }
@@ -411,13 +410,201 @@
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+
+  /* ── AirClaim AI / DATA extensions ── */
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #b42318; color: #fff; font-family: var(--mono);
+    font-size: 11px; font-weight: 600; letter-spacing: .02em; flex-shrink: 0;
+  }
+  .ai-layout { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(320px,.8fr); gap: 14px; }
+  .ai-summary { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .ai-hero {
+    border: 1px solid rgba(37,99,235,.18); background: var(--accent-dim);
+    border-radius: var(--r); padding: 14px; line-height: 1.7; color: var(--text-1);
+  }
+  .ai-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .ai-check { border: 1px solid var(--border); background: var(--surface2); border-radius: var(--r); padding: 12px; }
+  .ai-check-label { font-size: 10px; color: var(--text-3); font-family: var(--mono); margin-bottom: 7px; }
+  .ai-check-value { font-size: 15px; font-weight: 600; color: var(--text-1); }
+  .risk-meter { height: 8px; border-radius: 20px; background: var(--surface3); overflow: hidden; margin-top: 8px; }
+  .risk-meter > span { height: 100%; display: block; background: linear-gradient(90deg,var(--green),var(--amber),var(--red)); }
+  .action-list { display: flex; flex-direction: column; gap: 8px; }
+  .action-item {
+    display: grid; grid-template-columns: 26px 1fr; gap: 9px; align-items: start;
+    border-bottom: 1px solid var(--border); padding: 0 0 10px;
+  }
+  .action-num {
+    width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--accent-dim); color: var(--accent); font-family: var(--mono); font-size: 10px;
+  }
+  .data-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+  .data-stat { border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-lg); padding: 15px; }
+  .data-stat strong { display: block; font-family: var(--mono); font-size: 22px; margin-top: 6px; }
+  .data-stat span { color: var(--text-3); font-size: 11px; }
+  .schema-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; padding: 16px; }
+  .schema-item { border: 1px solid var(--border); background: var(--surface2); border-radius: var(--r); padding: 12px; }
+  .schema-name { font-family: var(--mono); color: var(--accent); font-size: 12px; margin-bottom: 5px; }
+  .schema-desc { color: var(--text-3); font-size: 11px; line-height: 1.55; }
+  .policy-note {
+    border: 1px solid rgba(245,158,11,.28); background: var(--amber-dim);
+    color: #8a5200; padding: 10px 12px; border-radius: var(--r); font-size: 11px; line-height: 1.6;
+  }
+  .role-select {
+    padding: 6px 28px 6px 9px; border: 1px solid var(--border); border-radius: var(--r);
+    background: var(--surface2); color: var(--text-2); font-size: 11px; cursor: pointer;
+  }
+  .work-queue { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding: 14px 16px 16px; }
+  .work-item {
+    border: 1px solid var(--border); border-radius: var(--r); background: var(--surface2);
+    padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 126px;
+  }
+  .work-item.urgent { border-left: 3px solid var(--red); }
+  .work-item.warning { border-left: 3px solid var(--amber); }
+  .work-item.normal { border-left: 3px solid var(--accent); }
+  .work-item-title { font-size: 12px; font-weight: 600; line-height: 1.5; }
+  .work-item-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); line-height: 1.5; }
+  .work-item-action { margin-top: auto; display: flex; justify-content: flex-end; }
+  .audit-list { display: flex; flex-direction: column; gap: 0; }
+  .audit-row {
+    display: grid; grid-template-columns: 132px 100px 1fr 140px; gap: 10px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 11px; align-items: center;
+  }
+  .audit-time { font-family: var(--mono); color: var(--text-3); }
+  .doc-checklist { display: grid; gap: 6px; }
+  .doc-check {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface2);
+  }
+  .doc-check-name { font-size: 11px; }
+  .doc-check-status { font-size: 10px; font-family: var(--mono); }
+  .btn-ai { background: #111827; color: #fff; }
+  .btn-ai:hover { background: #1f2937; }
+  .comp-grid-head, .comp-row {
+    grid-template-columns: minmax(180px,2fr) 70px 92px minmax(110px,1fr) minmax(100px,.9fr) minmax(120px,1.1fr) 34px !important;
+    min-width: 900px;
+  }
+  .comp-scroll { overflow-x: auto; }
+  .comp-rate {
+    min-height: 34px; display: flex; align-items: center; font-family: var(--mono);
+    color: var(--text-2); font-size: 11px; white-space: nowrap;
+  }
+  .comp-subtotal { white-space: nowrap; }
+  .fx-layout { display: grid; grid-template-columns: minmax(0,.9fr) minmax(360px,1.1fr); gap: 14px; }
+  .fx-converter { padding: 16px; display: grid; gap: 14px; }
+  .fx-input-grid { display: grid; grid-template-columns: 1fr 120px 38px 120px; gap: 8px; align-items: end; }
+  .fx-field { display: grid; gap: 6px; }
+  .fx-field label { font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+  .fx-result {
+    border-top: 1px solid var(--border); padding-top: 14px;
+    display: flex; align-items: end; justify-content: space-between; gap: 12px;
+  }
+  .fx-result-value { font-family: var(--mono); font-size: 26px; color: var(--text-1); font-weight: 500; }
+  .fx-result-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); text-align: right; line-height: 1.6; }
+  .fx-rate-table input { width: 130px; min-width: 0; font-family: var(--mono); text-align: right; }
+  .fx-rate-table input:disabled { background: var(--surface3); color: var(--text-3); cursor: not-allowed; }
+  .fx-code { font-family: var(--mono); font-weight: 600; color: var(--text-1); }
+  .fx-role-note { color: var(--text-3); font-size: 11px; }
+  .currency-switcher {
+    border: 1px solid var(--border); border-radius: var(--r); background: var(--surface2);
+    color: var(--text-1); font-family: var(--mono); font-size: 11px;
+  }
+  .currency-switcher-desktop {
+    margin: auto 12px 0; padding: 10px 12px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--r);
+  }
+  .currency-switcher-desktop label {
+    display: block; color: var(--text-3); font-size: 10px; margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+  .currency-switcher-desktop select { width: 100%; padding: 7px 9px; }
+  .currency-switcher-mobile { display: none; width: 74px; padding: 6px 7px; }
+  .web-icon { width: 15px; height: 15px; display: block; }
+  .web-icon-fallback { display: none; }
+  .topbar-actions .role-select { order: 1; }
+  .topbar-actions [title="待辦通知"] { order: 2; }
+  .topbar-actions [title="匯出"] { order: 3; }
+  .topbar-actions .currency-switcher-mobile { order: 4; }
+  .topbar-actions .user-avatar { order: 5; flex: 0 0 56px; }
+  @media (max-width: 980px) {
+    .sidebar { width: 190px; }
+    .ai-layout, .data-grid, .work-queue, .fx-layout { grid-template-columns: 1fr; }
+    .schema-list { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .fx-input-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    body { overflow-x: hidden; }
+    .topbar {
+      height: 82px; padding: 8px 10px;
+      display: grid; grid-template-columns: minmax(100px,1fr) 30px 30px 74px;
+      grid-template-rows: 28px 32px; column-gap: 5px; row-gap: 6px;
+    }
+    .logo {
+      grid-column: 1 / 4; grid-row: 1; min-width: 0; max-width: none;
+      font-size: 12px; line-height: 1.25; overflow: hidden;
+    }
+    .brand-mark { width: 28px; min-width: 28px; }
+    .topbar-meta { display: none; }
+    .topbar-actions { display: contents; }
+    .topbar-actions .role-select {
+      grid-column: 1; grid-row: 2; width: 100%; min-width: 0;
+      padding: 6px 22px 6px 7px;
+    }
+    .topbar-actions [title="待辦通知"] {
+      grid-column: 2; grid-row: 2; display: flex;
+    }
+    .topbar-actions [title="匯出"] {
+      grid-column: 3; grid-row: 2; display: flex;
+    }
+    .topbar-actions .currency-switcher-mobile {
+      grid-column: 4; grid-row: 2; display: block; width: 74px;
+    }
+    .topbar-actions .user-avatar {
+      grid-column: 4; grid-row: 1; display: flex !important; justify-self: end;
+      width: 56px !important; height: 28px;
+    }
+    .currency-switcher-desktop { display: none; }
+    .layout { height: calc(100vh - 82px); overflow: visible; }
+    .sidebar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 160;
+      width: 100%; height: 64px; padding: 0; flex-direction: row;
+      overflow-x: auto; overflow-y: hidden; border-right: 0; border-top: 1px solid var(--border);
+      box-shadow: 0 -2px 10px rgba(15,23,42,.08);
+    }
+    .sidebar-section { display: flex; flex: 0 0 auto; margin: 0; }
+    .sidebar-label, .sidebar-divider, .stat-block { display: none; }
+    .nav-item {
+      min-width: 72px; height: 63px; padding: 7px 6px; gap: 4px;
+      flex-direction: column; justify-content: center; border-left: 0; border-top: 2px solid transparent;
+      font-size: 10px; white-space: nowrap;
+    }
+    .nav-item.active { border-left-color: transparent; border-top-color: var(--accent); }
+    .nav-item svg { width: 16px; height: 16px; }
+    .nav-badge { position: absolute; margin: -30px 0 0 34px; }
+    .main { min-width: 0; width: 100%; padding: 16px 14px 88px; }
+    .page { min-width: 0; gap: 14px; }
+    .page-header { align-items: stretch; flex-direction: column; gap: 12px; }
+    .page-header > div:last-child { flex-wrap: wrap; }
+    .page-title { font-size: 22px; }
+    .page-sub { line-height: 1.6; overflow-wrap: anywhere; }
+    .fx-input-grid { grid-template-columns: minmax(0,1fr) 76px 38px 76px; }
+    .fx-result { align-items: flex-start; flex-direction: column; }
+    .fx-result-meta { text-align: left; }
+    .fx-result-value { font-size: 23px; }
+    .data-grid, .kpi-row { grid-template-columns: 1fr; }
+    .audit-row { grid-template-columns: 1fr; gap: 3px; }
+  }
+
 </style>
 </head>
 <body>
 
 <header class="topbar">
   <div class="logo">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfrNK89DSHW9eoSIkpLiq9ry684Paw87sFBA&s" alt="logo">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfrNK89DSHW9eoSIkpLiq9ry684Paw87sFBA&amp;s" alt="logo">
     AirClaim · 國航行李結算系統
   </div>
   <div class="topbar-meta">
@@ -426,13 +613,22 @@
     <span id="clock" style="font-family:var(--mono);color:var(--text-2)"></span>
   </div>
   <div class="topbar-actions">
-    <button class="btn btn-ghost btn-icon" title="通知" onclick="showToast('目前無新通知','success')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <button class="btn btn-ghost btn-icon" title="待辦通知" onclick="showWorkNotification()">
+      <img class="web-icon" src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/list-todo.svg" alt="" aria-hidden="true" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <svg class="web-icon-fallback" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/></svg>
     </button>
     <button class="btn btn-ghost btn-icon" title="匯出" onclick="showToast('報表匯出中…','success')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <img class="web-icon" src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/download.svg" alt="" aria-hidden="true" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <svg class="web-icon-fallback" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
     </button>
-    <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;color:#fff;" title="登入帳號">AG</div>
+    <select class="role-select" id="role-select" onchange="setRole(this.value)" title="切換工作角色">
+      <option value="agent">地服人員</option>
+      <option value="supervisor">場站領導</option>
+      <option value="finance">財務人員</option>
+      <option value="auditor">稽核人員</option>
+    </select>
+    <select class="currency-switcher currency-switcher-mobile" id="display-currency-mobile" onchange="setDisplayCurrency(this.value)" title="切換顯示貨幣"></select>
+    <div class="user-avatar" style="width:28px;height:28px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;" title="登入帳號">AG</div>
   </div>
 </header>
 
@@ -448,7 +644,7 @@
       <div class="nav-item" onclick="navigate('cases',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
         案件管理
-        <span class="nav-badge">12</span>
+        <span class="nav-badge" id="nav-case-count">12</span>
       </div>
       <div class="nav-item" onclick="navigate('new-case',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -457,7 +653,12 @@
       <div class="nav-item" onclick="navigate('settlement',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         財務結算
-        <span class="nav-badge">3</span>
+        <span class="nav-badge" id="nav-pending-count">3</span>
+      </div>
+
+      <div class="nav-item" onclick="navigate('currency',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 8h8"/><path d="M8 16h8"/><path d="M9 5c2 2 4 4 6 7"/><path d="M15 19c-2-2-4-4-6-7"/></svg>
+        匯率與換算
       </div>
     </div>
     <div class="sidebar-divider"></div>
@@ -468,22 +669,37 @@
         WORLD TRACER
       </div>
       <div class="nav-item" onclick="navigate('docs',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         文件管理
+      </div>
+
+      <div class="nav-item" onclick="navigate('ai',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>
+        AI 智慧審查
+        <span class="nav-badge" id="ai-risk-badge">2</span>
       </div>
       <div class="nav-item" onclick="navigate('reports',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         統計報表
       </div>
+
+      <div class="nav-item" onclick="navigate('data',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+        資料與稽核
+      </div>
     </div>
     <div class="sidebar-divider"></div>
     <div class="stat-block">
       <div class="stat-block-label">本月待結算</div>
-      <div class="stat-block-val">NT$148,200 <span>TWD</span></div>
+      <div class="stat-block-val" id="sidebar-pending-amount">CNY 0 <span>人民幣</span></div>
     </div>
     <div class="stat-block">
       <div class="stat-block-label">開放案件</div>
-      <div class="stat-block-val">12 <span>件</span></div>
+      <div class="stat-block-val" id="sidebar-open-count">0 <span>件</span></div>
+    </div>
+    <div class="currency-switcher-desktop">
+      <label for="display-currency-desktop">顯示貨幣</label>
+      <select class="currency-switcher" id="display-currency-desktop" onchange="setDisplayCurrency(this.value)"></select>
     </div>
   </nav>
 
@@ -506,24 +722,33 @@
       <div class="kpi-row">
         <div class="kpi blue">
           <div class="kpi-label">本月總案件</div>
-          <div class="kpi-val">47 <span>件</span></div>
-          <div class="kpi-delta up">▲ 8 件 較上月</div>
+          <div class="kpi-val" id="kpi-total">0 <span>件</span></div>
+          <div class="kpi-delta up" id="kpi-total-note">資料庫即時統計</div>
         </div>
         <div class="kpi green">
           <div class="kpi-label">已完成結算</div>
-          <div class="kpi-val">35 <span>件</span></div>
-          <div class="kpi-delta up">▲ 74.5% 結案率</div>
+          <div class="kpi-val" id="kpi-closed">0 <span>件</span></div>
+          <div class="kpi-delta up" id="kpi-close-rate">0% 結案率</div>
         </div>
         <div class="kpi amber">
           <div class="kpi-label">待審核金額</div>
-          <div class="kpi-val">148 <span>K TWD</span></div>
-          <div class="kpi-delta down">▼ 3件 待批</div>
+          <div class="kpi-val" id="kpi-pending-amount">CNY 0</div>
+          <div class="kpi-delta down" id="kpi-pending-note">0 件待批</div>
         </div>
         <div class="kpi red">
           <div class="kpi-label">逾期未結</div>
-          <div class="kpi-val">2 <span>件</span></div>
-          <div class="kpi-delta down">▼ 需緊急處理</div>
+          <div class="kpi-val" id="kpi-overdue">0 <span>件</span></div>
+          <div class="kpi-delta down">超過 30 天主動提醒</div>
         </div>
+      </div>
+
+
+      <div class="card">
+        <div class="card-header">
+          <span id="work-queue-title">我的待辦</span>
+          <span id="work-queue-count" class="nav-badge">0</span>
+        </div>
+        <div class="work-queue" id="work-queue"></div>
       </div>
 
       <div class="card">
@@ -558,7 +783,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">案件管理</div>
-          <div class="page-sub">CASE MANAGEMENT · 共 47 件</div>
+          <div class="page-sub" id="case-management-count">CASE MANAGEMENT · 共 0 件</div>
         </div>
         <div style="display:flex;gap:8px">
           <div class="search-bar" style="width:220px;">
@@ -732,20 +957,27 @@
 
       <div class="card">
         <div class="card-header">
-          行李賠償項目明細
-          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="addCompRow()">+ 新增項目</button>
+          <span>行李賠償項目明細</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="navigate('currency',document.querySelector('[onclick*=currency]'))">查看匯率</button>
+            <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="addCompRow()">+ 新增項目</button>
+          </div>
         </div>
-        <div style="padding:12px 16px 4px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;">
-          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">項目描述</div>
-          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">數量</div>
-          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">單價 (TWD)</div>
-          <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;">小計</div>
-          <div></div>
+        <div class="comp-scroll">
+          <div class="comp-grid-head" style="padding:12px 16px 4px;display:grid;gap:10px;">
+            <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">項目描述</div>
+            <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">數量</div>
+            <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">原幣</div>
+            <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">原幣單價</div>
+            <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">匯率 (TWD)</div>
+            <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">折算台幣</div>
+            <div></div>
+          </div>
+          <div id="comp-rows"></div>
         </div>
-        <div id="comp-rows"></div>
         <div class="comp-total">
           <span class="comp-total-label">申請總金額</span>
-          <span class="comp-total-val" id="comp-total">NT$ 0</span>
+          <span class="comp-total-val" id="comp-total">CNY 0</span>
         </div>
       </div>
 
@@ -763,7 +995,7 @@
           <div class="page-sub">FINANCIAL SETTLEMENT · 3 件待批准</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost" onclick="showToast('報表產生中…','success')">匯出結算報表</button>
+          <button class="btn btn-ghost" onclick="exportCasesCSV()">匯出結算資料</button>
           <button class="btn btn-green" onclick="showToast('批量核准已送出','success')">批量核准</button>
         </div>
       </div>
@@ -774,32 +1006,8 @@
       </div>
 
       <div class="card">
-        <div class="card-header">案件 BC-2026-0041 · 結算進度</div>
-        <div class="settlement-step">
-          <div class="step-num done">✓</div>
-          <div class="step-info"><div class="step-name">案件建立與文件上傳</div><div class="step-time">2026-05-10 09:23</div></div>
-        </div>
-        <div class="settlement-step">
-          <div class="step-num done">✓</div>
-          <div class="step-info"><div class="step-name">WORLD TRACER 驗證完成</div><div class="step-time">2026-05-10 09:45</div></div>
-        </div>
-        <div class="settlement-step">
-          <div class="step-num done">✓</div>
-          <div class="step-info"><div class="step-name">地勤主管審核</div><div class="step-time">2026-05-11 14:00</div></div>
-        </div>
-        <div class="settlement-step">
-          <div class="step-num active">→</div>
-          <div class="step-info"><div class="step-name">財務部門審核中</div><div class="step-time">進行中</div></div>
-          <div class="step-action"><button class="btn btn-green" style="font-size:11px;padding:5px 10px;" onclick="showToast('案件 BC-2026-0041 已核准','success')">核准</button></div>
-        </div>
-        <div class="settlement-step">
-          <div class="step-num todo">5</div>
-          <div class="step-info"><div class="step-name">款項撥付旅客</div><div class="step-time">待執行</div></div>
-        </div>
-        <div class="settlement-step" style="border-bottom:none">
-          <div class="step-num todo">6</div>
-          <div class="step-info"><div class="step-name">案件結案歸檔</div><div class="step-time">待執行</div></div>
-        </div>
+        <div class="card-header" id="approval-flow-title">案件結算進度</div>
+        <div id="approval-flow"></div>
       </div>
     </div>
 
@@ -853,19 +1061,133 @@
       </div>
     </div>
 
+
+    <div class="page" id="page-ai">
+      <div class="page-header">
+        <div>
+          <div class="page-title">AI 智慧審查</div>
+          <div class="page-sub">AI ASSISTED REVIEW · 缺件、鑑真、上限、決策理由</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="ai-case-select" onchange="renderAIReview(this.value)" style="min-width:220px;padding:7px 10px;font-size:12px;"></select>
+          <button class="btn btn-ai" onclick="runAIReview()">執行檢核</button>
+        </div>
+      </div>
+      <div class="policy-note">AI 提供風險提示、文件檢核與決策理由；核准、退回與賠償決定仍由具權限的主管及財務人員負責。</div>
+      <div class="ai-layout">
+        <div class="card">
+          <div class="card-header">審查摘要與理由</div>
+          <div class="ai-summary">
+            <div class="ai-hero" id="ai-summary-text"></div>
+            <div class="ai-grid">
+              <div class="ai-check"><div class="ai-check-label">文件完整度</div><div class="ai-check-value" id="ai-doc-score"></div></div>
+              <div class="ai-check"><div class="ai-check-label">重複理賠風險</div><div class="ai-check-value" id="ai-duplicate-risk"></div></div>
+              <div class="ai-check"><div class="ai-check-label">照片鑑真</div><div class="ai-check-value" id="ai-photo-check"></div></div>
+              <div class="ai-check"><div class="ai-check-label">理賠上限</div><div class="ai-check-value" id="ai-policy-cap"></div></div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);">AI RISK SCORE</div>
+              <div class="risk-meter"><span id="ai-risk-meter" style="width:0%"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">建議下一步</div>
+          <div style="padding:16px;" class="action-list" id="ai-action-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">AI 導入工作流</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>步驟</th><th>實際流程</th><th>AI 輔助</th><th>無紙化成果</th></tr></thead>
+            <tbody id="ai-workflow-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-currency">
+      <div class="page-header">
+        <div>
+          <div class="page-title">匯率與換算</div>
+          <div class="page-sub">TWD · CNY · USD · EUR · JPY · KRW · THB · SGD · HKD</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:end;">
+          <div class="fx-field">
+            <label for="fx-rate-date">參考匯率日期</label>
+            <input type="date" id="fx-rate-date">
+          </div>
+          <button class="btn btn-primary" id="fx-save-button" onclick="saveFxRates()">儲存參考匯率</button>
+        </div>
+      </div>
+      <div class="policy-note">此頁為離線參考換算，不是即時牌告匯率。實際理賠應由財務依結算日、公司規範與正式匯率來源確認；系統會保留案件使用的幣別、匯率日期與折算結果。</div>
+      <div class="fx-layout">
+        <div class="card">
+          <div class="card-header">快速換算</div>
+          <div class="fx-converter">
+            <div class="fx-input-grid">
+              <div class="fx-field">
+                <label for="fx-amount">金額</label>
+                <input type="number" id="fx-amount" min="0" step="any" value="100" oninput="calculateFx()">
+              </div>
+              <div class="fx-field">
+                <label for="fx-from">原幣</label>
+                <select id="fx-from" onchange="calculateFx()"></select>
+              </div>
+              <button class="btn btn-ghost btn-icon" title="交換幣別" onclick="swapFxCurrencies()">⇄</button>
+              <div class="fx-field">
+                <label for="fx-to">目標幣別</label>
+                <select id="fx-to" onchange="calculateFx()"></select>
+              </div>
+            </div>
+            <div class="fx-result">
+              <div>
+                <div style="font-size:10px;color:var(--text-3);font-family:var(--mono);margin-bottom:6px;">換算結果</div>
+                <div class="fx-result-value" id="fx-result">CNY 0</div>
+              </div>
+              <div class="fx-result-meta" id="fx-rate-text"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">使用方式</div>
+          <div style="padding:16px;display:grid;gap:12px;font-size:12px;line-height:1.7;color:var(--text-2);">
+            <div><strong>案件承辦：</strong>在賠償明細選擇收據原幣，系統自動換算成 TWD。</div>
+            <div><strong>財務人員：</strong>確認參考日期與匯率後儲存，之後新增的明細立即套用。</div>
+            <div><strong>稽核追溯：</strong>案件保留原幣單價、使用匯率、TWD 小計及匯率日期。</div>
+            <div class="fx-role-note" id="fx-role-note"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span>參考匯率表</span>
+          <span style="font-size:10px;color:var(--text-3);font-family:var(--mono);">1 單位外幣 = TWD</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="fx-rate-table">
+            <thead><tr><th>幣別</th><th>名稱</th><th>1 單位折合 TWD</th><th>權限</th></tr></thead>
+            <tbody id="fx-rate-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-reports">
       <div class="page-header">
         <div>
           <div class="page-title">統計報表</div>
-          <div class="page-sub">ANALYTICS · 2026年05月</div>
+          <div class="page-sub">ANALYTICS · 2026年06月 · AI / 無紙化 / 效率</div>
         </div>
-        <button class="btn btn-ghost" onclick="showToast('Excel 匯出中…','success')">匯出 Excel</button>
+        <button class="btn btn-ghost" onclick="exportCasesCSV()">匯出 CSV</button>
       </div>
       <div class="kpi-row">
-        <div class="kpi blue"><div class="kpi-label">本月總賠償金額</div><div class="kpi-val">1.2M <span>TWD</span></div><div class="kpi-delta down">▼ 8% 較上月</div></div>
-        <div class="kpi green"><div class="kpi-label">平均結案天數</div><div class="kpi-val">4.3 <span>天</span></div><div class="kpi-delta up">▲ 優化 0.7天</div></div>
-        <div class="kpi amber"><div class="kpi-label">旅客滿意度</div><div class="kpi-val">4.2 <span>/5</span></div><div class="kpi-delta up">▲ 持平</div></div>
-        <div class="kpi red"><div class="kpi-label">拒賠率</div><div class="kpi-val">6.3 <span>%</span></div><div class="kpi-delta up">▼ 下降 1.2%</div></div>
+        <div class="kpi blue"><div class="kpi-label">本月總賠償金額</div><div class="kpi-val" id="report-amount">CNY 0</div><div class="kpi-delta down">▼ 8% 較上月</div></div>
+        <div class="kpi green"><div class="kpi-label">平均結案天數</div><div class="kpi-val" id="report-close-days">10 <span>天內</span></div><div class="kpi-delta up">▲ 優化 0.7天</div></div>
+        <div class="kpi amber"><div class="kpi-label">旅客滿意度</div><div class="kpi-val" id="report-paper-saved">0 <span>張</span></div><div class="kpi-delta up">▲ 持平</div></div>
+        <div class="kpi red"><div class="kpi-label">拒賠率</div><div class="kpi-val" id="report-hours-saved">0 <span>h</span></div><div class="kpi-delta up">▼ 下降 1.2%</div></div>
       </div>
       <div class="card">
         <div class="card-header">案件類型分佈</div>
@@ -886,6 +1208,43 @@
             <div style="font-family:var(--mono);font-size:28px;color:var(--green)">7%</div>
             <div style="font-size:12px;color:var(--text-3);margin-top:4px;">行李短少</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-data">
+      <div class="page-header">
+        <div>
+          <div class="page-title">資料與稽核</div>
+          <div class="page-sub">AUDIT TRAIL · DATA QUALITY · EXPORT</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="exportCasesCSV()">匯出 CSV</button>
+          <button class="btn btn-primary" onclick="exportDatabase()">匯出 JSON</button>
+        </div>
+      </div>
+      <div class="policy-note">案件、文件、簽核與 AI 建議都應留下時間、角色與異動紀錄；正式上線時需依公司資安政策設定權限、保存期限與個資遮罩。</div>
+      <div class="data-grid">
+        <div class="data-stat"><span>案件主檔</span><strong id="data-case-count">0</strong></div>
+        <div class="data-stat"><span>文件狀態</span><strong id="data-doc-count">0</strong></div>
+        <div class="data-stat"><span>電子簽核步驟</span><strong id="data-approval-count">0</strong></div>
+        <div class="data-stat"><span>AI 檢核紀錄</span><strong id="data-ai-count">0</strong></div>
+      </div>
+      <div class="card">
+        <div class="card-header">資料治理範圍</div>
+        <div class="schema-list" id="schema-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">最近操作紀錄</div>
+        <div class="audit-list" id="audit-log-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">最新資料預覽</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>案件</th><th>Tracer ID</th><th>旅客</th><th>狀態</th><th>AI 風險</th><th>下一步</th></tr></thead>
+            <tbody id="data-preview-body"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -913,61 +1272,80 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-// ── Data ──
-const cases = [
-  {id:'BC-2026-0047',tracer:'TPECA18923',name:'WANG/JIAMING',flight:'CA-185',route:'PEK→TPE',type:'delayed',amount:1365,status:'open',date:'2026-05-14'},
-  {id:'BC-2026-0046',tracer:'TPECA34512',name:'LIN/SHIHHAO',flight:'CA-410',route:'CKG→TPE',type:'damaged',amount:500,status:'pending',date:'2026-05-13'},
-  {id:'BC-2026-0045',tracer:'TPECA12200',name:'CHEN/YUMEI',flight:'CA-195',route:'PVG→TPE',type:'lost',amount:2000,status:'pending',date:'2026-05-12'},
-  {id:'BC-2026-0044',tracer:'TPECA29801',name:'HUANG/ZHEN',flight:'CA-912/CA-189',route:'ARN→PEK→TPE',type:'delayed',amount:8800,status:'closed',date:'2026-05-11'},
-  {id:'BC-2026-0043',tracer:'TPECA11234',name:'KIM/SOOYEON',flight:'CA-149',route:'HGH→TPE',type:'pilferage',amount:1365,status:'rejected',date:'2026-05-10'},
-  {id:'BC-2026-0042',tracer:'TPECA30009',name:'SUZUKI/HIRO',flight:'CA-185',route:'PEK→TPE',type:'damaged',amount:1365,status:'closed',date:'2026-05-09'},
-  {id:'BC-2026-0041',tracer:'TPECA09871',name:'CHEN/MINGHUA',flight:'CA-185',route:'PEK→TPE',type:'lost',amount:4000,status:'pending',date:'2026-05-10'},
-];
-
+// ── Data: generated from AirClaim_AI_Showcase_Package/data/airclaim_database.json ──
+const AIRCLAIM_DATA = {"meta":{"name":"AirClaim AI 智慧行李資訊系統 DATA","created_for":"AirClaim 行李理賠日常作業","as_of":"2026-06-15","classification":"Prototype operational data","note":"目前為原型資料；正式上線時應串接經授權的旅客、航班、文件與財務資料來源。"},"source_insights":{"theme":"將 AI、無紙化、效率落到行李理賠日常作業","current_pain":["每月約 120–180 件行李理賠案件需要紙本、手寫、複印、黏貼與裝箱。","World Tracer 資料需人工謄寫，單件約 8–12 分鐘且有筆誤風險。","紙本簽核需 2–3 個工作日，逾期案件常等旅客投訴才被發現。","月底財務整理與統計需大量時間，歷史案件稽核調閱以天計算。"],"target_outcome":["World Tracer 輸入從約 10 分鐘縮短到 30 秒。","簽核從 2–3 天縮短為當日可完成。","案件查詢從翻紙箱變成 10 秒搜尋。","每月節省 40–80 小時重複行政工時。"]},"cases":[{"case_id":"TPE-2026-0147","tracer_id":"TPECA18923","passenger":"WANG/LEI","flight":"CA186","route":"TPE-PEK-LHR","bag_tag":"999-123456","claim_type":"損毀","status":"待結算","priority":"高","received_date":"2026-06-13","owner":"地服 A","amount_twd":15500,"currency":"TWD","ai_risk":"低","ai_score":18,"next_action":"旅客補收據後送主管核准","days_open":2,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0146","tracer_id":"TPECA18910","passenger":"LIN/JIAYU","flight":"CA196","route":"TPE-PVG-CDG","bag_tag":"999-663421","claim_type":"遺失","status":"處理中","priority":"高","received_date":"2026-06-10","owner":"地服 B","amount_twd":28000,"currency":"TWD","ai_risk":"中","ai_score":46,"next_action":"等待 World Tracer 最終定位","days_open":5,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0145","tracer_id":"TPECA18892","passenger":"CHEN/SHUFEN","flight":"CA150","route":"TPE-HGH","bag_tag":"999-498021","claim_type":"延誤","status":"已結案","priority":"一般","received_date":"2026-06-08","owner":"地服 C","amount_twd":3800,"currency":"TWD","ai_risk":"低","ai_score":12,"next_action":"已歸檔","days_open":7,"sla_days":30,"paper_pages_saved":5},{"case_id":"TPE-2026-0143","tracer_id":"TPECA18840","passenger":"ZHANG/WEILONG","flight":"CA186","route":"TPE-PEK-FRA","bag_tag":"999-771204","claim_type":"遺失","status":"待財務","priority":"高","received_date":"2026-06-02","owner":"地服 A","amount_twd":45000,"currency":"TWD","ai_risk":"中","ai_score":51,"next_action":"財務二次審閱","days_open":13,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0139","tracer_id":"TPECA18781","passenger":"HUANG/MIN","flight":"CA196","route":"TPE-PVG","bag_tag":"999-340991","claim_type":"損毀","status":"逾期","priority":"緊急","received_date":"2026-05-06","owner":"地服 D","amount_twd":18800,"currency":"TWD","ai_risk":"高","ai_score":78,"next_action":"主管介入，要求補照片原檔","days_open":40,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0132","tracer_id":"TPECA18702","passenger":"LIU/ANNA","flight":"CA150","route":"TPE-HGH-PEK","bag_tag":"999-701183","claim_type":"遺失","status":"逾期","priority":"緊急","received_date":"2026-05-02","owner":"地服 B","amount_twd":52000,"currency":"TWD","ai_risk":"中","ai_score":63,"next_action":"旅客證件已齊，待主管核准","days_open":44,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0128","tracer_id":"TPECA18660","passenger":"TSAI/ERIC","flight":"CA5518","route":"TPE-CKG","bag_tag":"999-885540","claim_type":"延誤","status":"已結案","priority":"一般","received_date":"2026-05-26","owner":"地服 C","amount_twd":6200,"currency":"TWD","ai_risk":"低","ai_score":9,"next_action":"已歸檔","days_open":20,"sla_days":30,"paper_pages_saved":5},{"case_id":"TPE-2026-0116","tracer_id":"TPECA18541","passenger":"KIM/SORA","flight":"CA186","route":"TPE-PEK-ICN","bag_tag":"999-312909","claim_type":"損毀","status":"主管核准","priority":"高","received_date":"2026-05-19","owner":"地服 A","amount_twd":23800,"currency":"TWD","ai_risk":"中","ai_score":42,"next_action":"送財務結算","days_open":27,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0109","tracer_id":"TPECA18485","passenger":"PARK/MINJUN","flight":"CA196","route":"TPE-PVG-AMS","bag_tag":"999-621485","claim_type":"遺失","status":"已結案","priority":"高","received_date":"2026-05-10","owner":"地服 D","amount_twd":37500,"currency":"TWD","ai_risk":"低","ai_score":25,"next_action":"已歸檔","days_open":36,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0098","tracer_id":"TPECA18376","passenger":"HSU/YITING","flight":"CA150","route":"TPE-HGH","bag_tag":"999-150882","claim_type":"損毀","status":"待補件","priority":"一般","received_date":"2026-04-29","owner":"地服 C","amount_twd":9800,"currency":"TWD","ai_risk":"高","ai_score":84,"next_action":"要求收據與照片 EXIF 原檔","days_open":47,"sla_days":30,"paper_pages_saved":7},{"case_id":"TPE-2026-0084","tracer_id":"TPECA18291","passenger":"WU/MEI","flight":"CA186","route":"TPE-PEK-MXP","bag_tag":"999-482110","claim_type":"延誤","status":"已結案","priority":"一般","received_date":"2026-04-18","owner":"地服 B","amount_twd":7200,"currency":"TWD","ai_risk":"低","ai_score":14,"next_action":"已歸檔","days_open":58,"sla_days":30,"paper_pages_saved":5},{"case_id":"TPE-2026-0071","tracer_id":"TPECA18160","passenger":"YANG/BO","flight":"CA196","route":"TPE-PVG-MUC","bag_tag":"999-772018","claim_type":"遺失","status":"已結案","priority":"高","received_date":"2026-04-02","owner":"地服 A","amount_twd":41000,"currency":"TWD","ai_risk":"中","ai_score":55,"next_action":"已歸檔","days_open":74,"sla_days":30,"paper_pages_saved":7}],"documents":[{"doc_id":"TPE-2026-0147-passport","case_id":"TPE-2026-0147","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0147/passport.pdf","required":1},{"doc_id":"TPE-2026-0147-ticket","case_id":"TPE-2026-0147","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0147/ticket.pdf","required":1},{"doc_id":"TPE-2026-0147-damage_photo","case_id":"TPE-2026-0147","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0147/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0147-receipt","case_id":"TPE-2026-0147","doc_type":"receipt","doc_name":"費用收據","status":"待補","ocr_status":"待辨識","storage_uri":"","required":1},{"doc_id":"TPE-2026-0147-property_list","case_id":"TPE-2026-0147","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0147/property_list.pdf","required":1},{"doc_id":"TPE-2026-0147-tracer_report","case_id":"TPE-2026-0147","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0147/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0147-settlement_form","case_id":"TPE-2026-0147","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0147/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0146-passport","case_id":"TPE-2026-0146","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0146/passport.pdf","required":1},{"doc_id":"TPE-2026-0146-ticket","case_id":"TPE-2026-0146","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0146/ticket.pdf","required":1},{"doc_id":"TPE-2026-0146-damage_photo","case_id":"TPE-2026-0146","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0146/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0146-receipt","case_id":"TPE-2026-0146","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0146/receipt.pdf","required":1},{"doc_id":"TPE-2026-0146-property_list","case_id":"TPE-2026-0146","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0146/property_list.pdf","required":1},{"doc_id":"TPE-2026-0146-tracer_report","case_id":"TPE-2026-0146","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0146/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0146-settlement_form","case_id":"TPE-2026-0146","doc_type":"settlement_form","doc_name":"結算單","status":"待補","ocr_status":"待辨識","storage_uri":"","required":1},{"doc_id":"TPE-2026-0145-passport","case_id":"TPE-2026-0145","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/passport.pdf","required":1},{"doc_id":"TPE-2026-0145-ticket","case_id":"TPE-2026-0145","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/ticket.pdf","required":1},{"doc_id":"TPE-2026-0145-damage_photo","case_id":"TPE-2026-0145","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0145-receipt","case_id":"TPE-2026-0145","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/receipt.pdf","required":1},{"doc_id":"TPE-2026-0145-property_list","case_id":"TPE-2026-0145","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/property_list.pdf","required":1},{"doc_id":"TPE-2026-0145-tracer_report","case_id":"TPE-2026-0145","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0145-settlement_form","case_id":"TPE-2026-0145","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0145/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0143-passport","case_id":"TPE-2026-0143","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/passport.pdf","required":1},{"doc_id":"TPE-2026-0143-ticket","case_id":"TPE-2026-0143","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/ticket.pdf","required":1},{"doc_id":"TPE-2026-0143-damage_photo","case_id":"TPE-2026-0143","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0143-receipt","case_id":"TPE-2026-0143","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/receipt.pdf","required":1},{"doc_id":"TPE-2026-0143-property_list","case_id":"TPE-2026-0143","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/property_list.pdf","required":1},{"doc_id":"TPE-2026-0143-tracer_report","case_id":"TPE-2026-0143","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0143-settlement_form","case_id":"TPE-2026-0143","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0143/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0139-passport","case_id":"TPE-2026-0139","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0139/passport.pdf","required":1},{"doc_id":"TPE-2026-0139-ticket","case_id":"TPE-2026-0139","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0139/ticket.pdf","required":1},{"doc_id":"TPE-2026-0139-damage_photo","case_id":"TPE-2026-0139","doc_type":"damage_photo","doc_name":"照片佐證","status":"待補","ocr_status":"待辨識","storage_uri":"","required":1},{"doc_id":"TPE-2026-0139-receipt","case_id":"TPE-2026-0139","doc_type":"receipt","doc_name":"費用收據","status":"待補","ocr_status":"待辨識","storage_uri":"","required":1},{"doc_id":"TPE-2026-0139-property_list","case_id":"TPE-2026-0139","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0139/property_list.pdf","required":1},{"doc_id":"TPE-2026-0139-tracer_report","case_id":"TPE-2026-0139","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0139/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0139-settlement_form","case_id":"TPE-2026-0139","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0139/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0132-passport","case_id":"TPE-2026-0132","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/passport.pdf","required":1},{"doc_id":"TPE-2026-0132-ticket","case_id":"TPE-2026-0132","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/ticket.pdf","required":1},{"doc_id":"TPE-2026-0132-damage_photo","case_id":"TPE-2026-0132","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0132-receipt","case_id":"TPE-2026-0132","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/receipt.pdf","required":1},{"doc_id":"TPE-2026-0132-property_list","case_id":"TPE-2026-0132","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/property_list.pdf","required":1},{"doc_id":"TPE-2026-0132-tracer_report","case_id":"TPE-2026-0132","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0132-settlement_form","case_id":"TPE-2026-0132","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0132/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0128-passport","case_id":"TPE-2026-0128","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/passport.pdf","required":1},{"doc_id":"TPE-2026-0128-ticket","case_id":"TPE-2026-0128","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/ticket.pdf","required":1},{"doc_id":"TPE-2026-0128-damage_photo","case_id":"TPE-2026-0128","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0128-receipt","case_id":"TPE-2026-0128","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/receipt.pdf","required":1},{"doc_id":"TPE-2026-0128-property_list","case_id":"TPE-2026-0128","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/property_list.pdf","required":1},{"doc_id":"TPE-2026-0128-tracer_report","case_id":"TPE-2026-0128","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0128-settlement_form","case_id":"TPE-2026-0128","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0128/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0116-passport","case_id":"TPE-2026-0116","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/passport.pdf","required":1},{"doc_id":"TPE-2026-0116-ticket","case_id":"TPE-2026-0116","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/ticket.pdf","required":1},{"doc_id":"TPE-2026-0116-damage_photo","case_id":"TPE-2026-0116","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0116-receipt","case_id":"TPE-2026-0116","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/receipt.pdf","required":1},{"doc_id":"TPE-2026-0116-property_list","case_id":"TPE-2026-0116","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/property_list.pdf","required":1},{"doc_id":"TPE-2026-0116-tracer_report","case_id":"TPE-2026-0116","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0116-settlement_form","case_id":"TPE-2026-0116","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0116/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0109-passport","case_id":"TPE-2026-0109","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/passport.pdf","required":1},{"doc_id":"TPE-2026-0109-ticket","case_id":"TPE-2026-0109","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/ticket.pdf","required":1},{"doc_id":"TPE-2026-0109-damage_photo","case_id":"TPE-2026-0109","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0109-receipt","case_id":"TPE-2026-0109","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/receipt.pdf","required":1},{"doc_id":"TPE-2026-0109-property_list","case_id":"TPE-2026-0109","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/property_list.pdf","required":1},{"doc_id":"TPE-2026-0109-tracer_report","case_id":"TPE-2026-0109","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0109-settlement_form","case_id":"TPE-2026-0109","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0109/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0098-passport","case_id":"TPE-2026-0098","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0098/passport.pdf","required":1},{"doc_id":"TPE-2026-0098-ticket","case_id":"TPE-2026-0098","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0098/ticket.pdf","required":1},{"doc_id":"TPE-2026-0098-damage_photo","case_id":"TPE-2026-0098","doc_type":"damage_photo","doc_name":"照片佐證","status":"待補","ocr_status":"待辨識","storage_uri":"","required":1},{"doc_id":"TPE-2026-0098-receipt","case_id":"TPE-2026-0098","doc_type":"receipt","doc_name":"費用收據","status":"待補","ocr_status":"待辨識","storage_uri":"","required":1},{"doc_id":"TPE-2026-0098-property_list","case_id":"TPE-2026-0098","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0098/property_list.pdf","required":1},{"doc_id":"TPE-2026-0098-tracer_report","case_id":"TPE-2026-0098","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0098/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0098-settlement_form","case_id":"TPE-2026-0098","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0098/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0084-passport","case_id":"TPE-2026-0084","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/passport.pdf","required":1},{"doc_id":"TPE-2026-0084-ticket","case_id":"TPE-2026-0084","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/ticket.pdf","required":1},{"doc_id":"TPE-2026-0084-damage_photo","case_id":"TPE-2026-0084","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0084-receipt","case_id":"TPE-2026-0084","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/receipt.pdf","required":1},{"doc_id":"TPE-2026-0084-property_list","case_id":"TPE-2026-0084","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/property_list.pdf","required":1},{"doc_id":"TPE-2026-0084-tracer_report","case_id":"TPE-2026-0084","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0084-settlement_form","case_id":"TPE-2026-0084","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0084/settlement_form.pdf","required":1},{"doc_id":"TPE-2026-0071-passport","case_id":"TPE-2026-0071","doc_type":"passport","doc_name":"護照/身分證件","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/passport.pdf","required":1},{"doc_id":"TPE-2026-0071-ticket","case_id":"TPE-2026-0071","doc_type":"ticket","doc_name":"機票/登機證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/ticket.pdf","required":1},{"doc_id":"TPE-2026-0071-damage_photo","case_id":"TPE-2026-0071","doc_type":"damage_photo","doc_name":"照片佐證","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/damage_photo.pdf","required":1},{"doc_id":"TPE-2026-0071-receipt","case_id":"TPE-2026-0071","doc_type":"receipt","doc_name":"費用收據","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/receipt.pdf","required":1},{"doc_id":"TPE-2026-0071-property_list","case_id":"TPE-2026-0071","doc_type":"property_list","doc_name":"財損清單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/property_list.pdf","required":1},{"doc_id":"TPE-2026-0071-tracer_report","case_id":"TPE-2026-0071","doc_type":"tracer_report","doc_name":"World Tracer 報告","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/tracer_report.pdf","required":1},{"doc_id":"TPE-2026-0071-settlement_form","case_id":"TPE-2026-0071","doc_type":"settlement_form","doc_name":"結算單","status":"已上傳","ocr_status":"已辨識","storage_uri":"vault/TPE-2026-0071/settlement_form.pdf","required":1}],"settlements":[{"settlement_id":"SET-0001","case_id":"TPE-2026-0147","item":"行李箱修理估價","amount":9500,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0002","case_id":"TPE-2026-0147","item":"必要用品","amount":6000,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0003","case_id":"TPE-2026-0146","item":"遺失衣物與生活用品","amount":28000,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0004","case_id":"TPE-2026-0145","item":"延誤必要用品","amount":3800,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0005","case_id":"TPE-2026-0143","item":"遺失行李賠償","amount":45000,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0006","case_id":"TPE-2026-0139","item":"行李箱破損估價","amount":18800,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0007","case_id":"TPE-2026-0132","item":"遺失行李賠償","amount":52000,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0008","case_id":"TPE-2026-0128","item":"延誤必要用品","amount":6200,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0009","case_id":"TPE-2026-0116","item":"高價行李箱破損","amount":23800,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0010","case_id":"TPE-2026-0109","item":"遺失行李賠償","amount":37500,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0011","case_id":"TPE-2026-0098","item":"維修與換購估價","amount":9800,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0012","case_id":"TPE-2026-0084","item":"延誤必要用品","amount":7200,"currency":"TWD","policy_cap_check":"通過"},{"settlement_id":"SET-0013","case_id":"TPE-2026-0071","item":"遺失行李賠償","amount":41000,"currency":"TWD","policy_cap_check":"通過"}],"approvals":[{"approval_id":"TPE-2026-0147-A1","case_id":"TPE-2026-0147","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0147-A2","case_id":"TPE-2026-0147","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0147-A3","case_id":"TPE-2026-0147","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0147-A4","case_id":"TPE-2026-0147","step_no":4,"step_name":"主管核准","role":"主管","status":"等待","actor":"站主管"},{"approval_id":"TPE-2026-0147-A5","case_id":"TPE-2026-0147","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0147-A6","case_id":"TPE-2026-0147","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0147-A7","case_id":"TPE-2026-0147","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0146-A1","case_id":"TPE-2026-0146","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0146-A2","case_id":"TPE-2026-0146","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0146-A3","case_id":"TPE-2026-0146","step_no":3,"step_name":"金額核算","role":"地服","status":"等待","actor":"Agent C"},{"approval_id":"TPE-2026-0146-A4","case_id":"TPE-2026-0146","step_no":4,"step_name":"主管核准","role":"主管","status":"等待","actor":"站主管"},{"approval_id":"TPE-2026-0146-A5","case_id":"TPE-2026-0146","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0146-A6","case_id":"TPE-2026-0146","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0146-A7","case_id":"TPE-2026-0146","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0145-A1","case_id":"TPE-2026-0145","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0145-A2","case_id":"TPE-2026-0145","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0145-A3","case_id":"TPE-2026-0145","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0145-A4","case_id":"TPE-2026-0145","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0145-A5","case_id":"TPE-2026-0145","step_no":5,"step_name":"財務審閱","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0145-A6","case_id":"TPE-2026-0145","step_no":6,"step_name":"撥款","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0145-A7","case_id":"TPE-2026-0145","step_no":7,"step_name":"結案歸檔","role":"系統","status":"完成","actor":"System"},{"approval_id":"TPE-2026-0143-A1","case_id":"TPE-2026-0143","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0143-A2","case_id":"TPE-2026-0143","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0143-A3","case_id":"TPE-2026-0143","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0143-A4","case_id":"TPE-2026-0143","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0143-A5","case_id":"TPE-2026-0143","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0143-A6","case_id":"TPE-2026-0143","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0143-A7","case_id":"TPE-2026-0143","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0139-A1","case_id":"TPE-2026-0139","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0139-A2","case_id":"TPE-2026-0139","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0139-A3","case_id":"TPE-2026-0139","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0139-A4","case_id":"TPE-2026-0139","step_no":4,"step_name":"主管核准","role":"主管","status":"等待","actor":"站主管"},{"approval_id":"TPE-2026-0139-A5","case_id":"TPE-2026-0139","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0139-A6","case_id":"TPE-2026-0139","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0139-A7","case_id":"TPE-2026-0139","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0132-A1","case_id":"TPE-2026-0132","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0132-A2","case_id":"TPE-2026-0132","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0132-A3","case_id":"TPE-2026-0132","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0132-A4","case_id":"TPE-2026-0132","step_no":4,"step_name":"主管核准","role":"主管","status":"等待","actor":"站主管"},{"approval_id":"TPE-2026-0132-A5","case_id":"TPE-2026-0132","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0132-A6","case_id":"TPE-2026-0132","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0132-A7","case_id":"TPE-2026-0132","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0128-A1","case_id":"TPE-2026-0128","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0128-A2","case_id":"TPE-2026-0128","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0128-A3","case_id":"TPE-2026-0128","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0128-A4","case_id":"TPE-2026-0128","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0128-A5","case_id":"TPE-2026-0128","step_no":5,"step_name":"財務審閱","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0128-A6","case_id":"TPE-2026-0128","step_no":6,"step_name":"撥款","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0128-A7","case_id":"TPE-2026-0128","step_no":7,"step_name":"結案歸檔","role":"系統","status":"完成","actor":"System"},{"approval_id":"TPE-2026-0116-A1","case_id":"TPE-2026-0116","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0116-A2","case_id":"TPE-2026-0116","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0116-A3","case_id":"TPE-2026-0116","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0116-A4","case_id":"TPE-2026-0116","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0116-A5","case_id":"TPE-2026-0116","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0116-A6","case_id":"TPE-2026-0116","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0116-A7","case_id":"TPE-2026-0116","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0109-A1","case_id":"TPE-2026-0109","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0109-A2","case_id":"TPE-2026-0109","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0109-A3","case_id":"TPE-2026-0109","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0109-A4","case_id":"TPE-2026-0109","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0109-A5","case_id":"TPE-2026-0109","step_no":5,"step_name":"財務審閱","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0109-A6","case_id":"TPE-2026-0109","step_no":6,"step_name":"撥款","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0109-A7","case_id":"TPE-2026-0109","step_no":7,"step_name":"結案歸檔","role":"系統","status":"完成","actor":"System"},{"approval_id":"TPE-2026-0098-A1","case_id":"TPE-2026-0098","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0098-A2","case_id":"TPE-2026-0098","step_no":2,"step_name":"文件審查","role":"地服","status":"等待","actor":"Agent B"},{"approval_id":"TPE-2026-0098-A3","case_id":"TPE-2026-0098","step_no":3,"step_name":"金額核算","role":"地服","status":"等待","actor":"Agent C"},{"approval_id":"TPE-2026-0098-A4","case_id":"TPE-2026-0098","step_no":4,"step_name":"主管核准","role":"主管","status":"等待","actor":"站主管"},{"approval_id":"TPE-2026-0098-A5","case_id":"TPE-2026-0098","step_no":5,"step_name":"財務審閱","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0098-A6","case_id":"TPE-2026-0098","step_no":6,"step_name":"撥款","role":"財務","status":"等待","actor":"財務"},{"approval_id":"TPE-2026-0098-A7","case_id":"TPE-2026-0098","step_no":7,"step_name":"結案歸檔","role":"系統","status":"等待","actor":"System"},{"approval_id":"TPE-2026-0084-A1","case_id":"TPE-2026-0084","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0084-A2","case_id":"TPE-2026-0084","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0084-A3","case_id":"TPE-2026-0084","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0084-A4","case_id":"TPE-2026-0084","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0084-A5","case_id":"TPE-2026-0084","step_no":5,"step_name":"財務審閱","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0084-A6","case_id":"TPE-2026-0084","step_no":6,"step_name":"撥款","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0084-A7","case_id":"TPE-2026-0084","step_no":7,"step_name":"結案歸檔","role":"系統","status":"完成","actor":"System"},{"approval_id":"TPE-2026-0071-A1","case_id":"TPE-2026-0071","step_no":1,"step_name":"案件受理","role":"地服","status":"完成","actor":"Agent A"},{"approval_id":"TPE-2026-0071-A2","case_id":"TPE-2026-0071","step_no":2,"step_name":"文件審查","role":"地服","status":"完成","actor":"Agent B"},{"approval_id":"TPE-2026-0071-A3","case_id":"TPE-2026-0071","step_no":3,"step_name":"金額核算","role":"地服","status":"完成","actor":"Agent C"},{"approval_id":"TPE-2026-0071-A4","case_id":"TPE-2026-0071","step_no":4,"step_name":"主管核准","role":"主管","status":"完成","actor":"站主管"},{"approval_id":"TPE-2026-0071-A5","case_id":"TPE-2026-0071","step_no":5,"step_name":"財務審閱","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0071-A6","case_id":"TPE-2026-0071","step_no":6,"step_name":"撥款","role":"財務","status":"完成","actor":"財務"},{"approval_id":"TPE-2026-0071-A7","case_id":"TPE-2026-0071","step_no":7,"step_name":"結案歸檔","role":"系統","status":"完成","actor":"System"}],"ai_evaluations":[{"case_id":"TPE-2026-0147","doc_completeness":86,"duplicate_claim_risk":"低","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"旅客補收據後送主管核准","summary":"TPE-2026-0147 為損毀案件，目前待結算；AI 風險分數 18，建議：旅客補收據後送主管核准。"},{"case_id":"TPE-2026-0146","doc_completeness":86,"duplicate_claim_risk":"中","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"等待 World Tracer 最終定位","summary":"TPE-2026-0146 為遺失案件，目前處理中；AI 風險分數 46，建議：等待 World Tracer 最終定位。"},{"case_id":"TPE-2026-0145","doc_completeness":100,"duplicate_claim_risk":"低","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"已歸檔","summary":"TPE-2026-0145 為延誤案件，目前已結案；AI 風險分數 12，建議：已歸檔。"},{"case_id":"TPE-2026-0143","doc_completeness":100,"duplicate_claim_risk":"中","photo_authenticity":"通過","policy_cap":"接近上限","suggested_action":"財務二次審閱","summary":"TPE-2026-0143 為遺失案件，目前待財務；AI 風險分數 51，建議：財務二次審閱。"},{"case_id":"TPE-2026-0139","doc_completeness":71,"duplicate_claim_risk":"高","photo_authenticity":"需人工覆核","policy_cap":"正常","suggested_action":"主管介入，要求補照片原檔","summary":"TPE-2026-0139 為損毀案件，目前逾期；AI 風險分數 78，建議：主管介入，要求補照片原檔。"},{"case_id":"TPE-2026-0132","doc_completeness":100,"duplicate_claim_risk":"中","photo_authenticity":"通過","policy_cap":"接近上限","suggested_action":"旅客證件已齊，待主管核准","summary":"TPE-2026-0132 為遺失案件，目前逾期；AI 風險分數 63，建議：旅客證件已齊，待主管核准。"},{"case_id":"TPE-2026-0128","doc_completeness":100,"duplicate_claim_risk":"低","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"已歸檔","summary":"TPE-2026-0128 為延誤案件，目前已結案；AI 風險分數 9，建議：已歸檔。"},{"case_id":"TPE-2026-0116","doc_completeness":100,"duplicate_claim_risk":"低","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"送財務結算","summary":"TPE-2026-0116 為損毀案件，目前主管核准；AI 風險分數 42，建議：送財務結算。"},{"case_id":"TPE-2026-0109","doc_completeness":100,"duplicate_claim_risk":"低","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"已歸檔","summary":"TPE-2026-0109 為遺失案件，目前已結案；AI 風險分數 25，建議：已歸檔。"},{"case_id":"TPE-2026-0098","doc_completeness":71,"duplicate_claim_risk":"高","photo_authenticity":"需人工覆核","policy_cap":"正常","suggested_action":"要求收據與照片 EXIF 原檔","summary":"TPE-2026-0098 為損毀案件，目前待補件；AI 風險分數 84，建議：要求收據與照片 EXIF 原檔。"},{"case_id":"TPE-2026-0084","doc_completeness":100,"duplicate_claim_risk":"低","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"已歸檔","summary":"TPE-2026-0084 為延誤案件，目前已結案；AI 風險分數 14，建議：已歸檔。"},{"case_id":"TPE-2026-0071","doc_completeness":100,"duplicate_claim_risk":"中","photo_authenticity":"通過","policy_cap":"正常","suggested_action":"已歸檔","summary":"TPE-2026-0071 為遺失案件，目前已結案；AI 風險分數 55，建議：已歸檔。"}],"monthly_kpis":[{"month":"2026-01","cases":126,"closed":96,"overdue":9,"paper_saved":760,"hours_saved":42,"settlement_twd":756000},{"month":"2026-02","cases":138,"closed":105,"overdue":8,"paper_saved":830,"hours_saved":48,"settlement_twd":811000},{"month":"2026-03","cases":141,"closed":111,"overdue":7,"paper_saved":865,"hours_saved":52,"settlement_twd":872000},{"month":"2026-04","cases":152,"closed":122,"overdue":6,"paper_saved":930,"hours_saved":58,"settlement_twd":904000},{"month":"2026-05","cases":147,"closed":116,"overdue":5,"paper_saved":900,"hours_saved":61,"settlement_twd":884000},{"month":"2026-06","cases":82,"closed":54,"overdue":5,"paper_saved":500,"hours_saved":34,"settlement_twd":412000}],"tracer_records":[{"tracer_id":"TPECA18923","passenger":"WANG/LEI","flight":"CA186","route":"TPE-PEK-LHR","bag_tag":"999-123456","last_event":"TPE 行李服務櫃台受理，照片與護照已完成 OCR。","auto_fill_seconds":30},{"tracer_id":"TPECA18910","passenger":"LIN/JIAYU","flight":"CA196","route":"TPE-PVG-CDG","bag_tag":"999-663421","last_event":"PVG 中轉掃描缺漏，等待最終定位。","auto_fill_seconds":30}],"audit_logs":[{"time":"2026-06-15 09:12","actor":"站主管","action":"查看逾期案件","case_id":"TPE-2026-0139"},{"time":"2026-06-15 09:18","actor":"地服 A","action":"上傳護照與照片","case_id":"TPE-2026-0147"},{"time":"2026-06-15 09:24","actor":"AI 補件檢查","action":"攔截缺少收據","case_id":"TPE-2026-0147"},{"time":"2026-06-15 09:31","actor":"財務","action":"通過金額上限檢查","case_id":"TPE-2026-0143"},{"time":"2026-06-15 09:42","actor":"系統","action":"生成月報草稿","case_id":"ALL"}],"workflow_steps":[{"step":1,"name":"案件受理","ai":"OCR 擷取旅客資料","paperless":"電子申報"},{"step":2,"name":"World Tracer","ai":"30 秒帶入航班/行李","paperless":"不再謄寫"},{"step":3,"name":"文件保險箱","ai":"缺件紅燈與影像辨識","paperless":"集中儲存"},{"step":4,"name":"金額核算","ai":"公約上限提示","paperless":"自動計算"},{"step":5,"name":"主管核准","ai":"風險摘要","paperless":"電子簽核"},{"step":6,"name":"財務結算","ai":"異常金額提醒","paperless":"一鍵月報"},{"step":7,"name":"歸檔稽核","ai":"搜尋與趨勢分析","paperless":"數位留痕"}],"roadmap":[{"phase":"30 天","focus":"試行上線","output":"10 件真實案件平行測試，完成資料欄位與文件清單校準"},{"phase":"60 天","focus":"部門協作","output":"主管與財務電子簽核、月報格式固定、逾期紅燈納入例會"},{"phase":"90 天","focus":"全面切換","output":"紙本流程退場，AirClaim 成為案件、文件、結算唯一入口"},{"phase":"2.0","focus":"AI 進階","output":"旅客 QR 自助申報、多語 OCR、照片鑑真、LLM 多語客服"}]};
+const STORAGE_KEY = 'airclaim-cases-v1';
+const ROLE_KEY = 'airclaim-current-role-v1';
+const AUDIT_KEY = 'airclaim-local-audit-v1';
 const typeLabel = {delayed:'行李延誤',damaged:'行李損壞',lost:'行李遺失',pilferage:'行李短少'};
 const statusLabel = {open:'處理中',pending:'待審核',closed:'已結案',rejected:'已拒絕'};
+const typeMap = {'延誤':'delayed','損毀':'damaged','遺失':'lost','短少':'pilferage'};
+const statusMap = {'已結案':'closed','待財務':'pending','主管核准':'pending','待結算':'pending','逾期':'open','待補件':'open','處理中':'open'};
+const roleLabel = {agent:'地服人員',supervisor:'場站領導',finance:'財務人員',auditor:'稽核人員'};
 
-const tracerDB = {
-  'TPECA12345': {
-    pax:'CHEN/MINGHUA', pnr:'ABC123', flight:'CA-186', route:'TPE→PEK',
-    date:'2026-05-10', bags:2, weight:'32kg', color:'黑色硬殼',
-    brand:'Samsonite', tag:'CA123456',
-    events:[
-      {loc:'TPE',desc:'行李報到登記',time:'2026-05-10 09:15',active:false},
-      {loc:'TPE T1',desc:'行李分揀輸送',time:'2026-05-10 09:45',active:false},
-      {loc:'PEK',desc:'抵達目的地，行李未到達',time:'2026-05-10 16:30',active:true},
-      {loc:'PEK',desc:'WORLD TRACER 案件開立',time:'2026-05-10 16:45',active:false},
-    ]
-  },
-  'TPECA18923': {
-    pax:'WANG/JIAMING', pnr:'XYZ789', flight:'CA-186', route:'TPE→PEK',
-    date:'2026-05-14', bags:1, weight:'18kg', color:'藍色軟殼',
-    brand:'Rimowa', tag:'CA987001',
-    events:[
-      {loc:'TPE',desc:'行李報到',time:'2026-05-14 07:00',active:false},
-      {loc:'PEK',desc:'行李未隨機抵達',time:'2026-05-14 14:20',active:true},
-    ]
-  }
-};
+const initialCases = AIRCLAIM_DATA.cases.map(c => ({
+  id:c.case_id, tracer:c.tracer_id, name:c.passenger, flight:c.flight,
+  route:c.route.replaceAll('-', '→'), type:typeMap[c.claim_type] || 'delayed',
+  amount:c.amount_twd, status:statusMap[c.status] || 'open', date:c.received_date,
+  sourceStatus:c.status, priority:c.priority, owner:c.owner, daysOpen:c.days_open,
+  aiRisk:c.ai_risk, aiScore:c.ai_score, nextAction:c.next_action, bagTag:c.bag_tag
+}));
 
-const MOCK_DOCS = [
-  {name:'PIR_BC2026-0047.pdf',size:'2.3 MB',type:'pdf',case:'BC-2026-0047',date:'2026-05-14'},
-  {name:'boarding_pass_WANG.pdf',size:'340 KB',type:'pdf',case:'BC-2026-0047',date:'2026-05-14'},
-  {name:'damaged_bag_photo1.jpg',size:'1.8 MB',type:'img',case:'BC-2026-0046',date:'2026-05-13'},
-  {name:'damaged_bag_photo2.jpg',size:'2.1 MB',type:'img',case:'BC-2026-0046',date:'2026-05-13'},
-  {name:'PIR_BC2026-0045.pdf',size:'1.5 MB',type:'pdf',case:'BC-2026-0045',date:'2026-05-12'},
-];
+function loadStoredCases() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    return Array.isArray(stored) && stored.length ? stored : initialCases;
+  } catch (_) { return initialCases; }
+}
+
+let cases = loadStoredCases();
+let currentRole = localStorage.getItem(ROLE_KEY) || 'agent';
+let localAuditLogs = JSON.parse(localStorage.getItem(AUDIT_KEY) || '[]');
+const tracerDB = Object.fromEntries(AIRCLAIM_DATA.tracer_records.map(t => [t.tracer_id, {
+  pax:t.passenger, pnr:'AIR26', flight:t.flight, route:t.route.replaceAll('-', '→'),
+  date:'2026-06-15', bags:1, weight:'18kg', color:'黑色硬殼',
+  brand:'待確認', tag:t.bag_tag,
+  events:[
+    {loc:'TPE',desc:'行李報到與案件受理',time:'2026-06-15 09:00',active:false},
+    {loc:t.route.split('-').at(-1),desc:t.last_event,time:'2026-06-15 09:30',active:true}
+  ]
+}]));
+
+const MOCK_DOCS = AIRCLAIM_DATA.documents
+  .filter(d => d.status === '已上傳')
+  .map(d => ({
+    name:d.storage_uri.split('/').at(-1), size:'已歸檔', type:d.doc_type.includes('photo')?'img':'pdf',
+    case:d.case_id, date:'2026-06-15', docName:d.doc_name, status:d.status
+  }));
 
 let uploadedFiles = [];
 let compRows = [];
 let allCasesFiltered = [...cases];
 
+function persistCases() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+}
+
+function addAudit(action, caseId='ALL') {
+  const log = {time:new Date().toLocaleString('zh-TW',{hour12:false}),actor:roleLabel[currentRole],action,case_id:caseId};
+  localAuditLogs.unshift(log);
+  localAuditLogs = localAuditLogs.slice(0,50);
+  localStorage.setItem(AUDIT_KEY,JSON.stringify(localAuditLogs));
+}
+
 // ── Navigation ──
 function navigate(page, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
+  const target = document.getElementById('page-'+page);
+  if(!target) return;
+  target.classList.add('active');
   if(el) el.classList.add('active');
+  if(page === 'ai') renderAIPage();
+  if(page === 'data') renderDataPage();
+  if(page === 'currency') renderCurrencyPage();
+  if(page === 'reports') updateReports();
+  if(page === 'dashboard') renderWorkQueue();
 }
 
 // ── Clock ──
@@ -987,7 +1365,7 @@ function renderCaseRow(c, showActions=false) {
     <td class="primary">${c.name}</td>
     <td class="mono">${c.flight} · ${c.route}</td>
     <td><span class="badge ${typeColors[c.type]||'pending'}">${typeLabel[c.type]}</span></td>
-    <td class="mono">NT$ ${c.amount.toLocaleString()}</td>
+    <td class="mono">${formatDisplayMoney(c.amount)}</td>
     <td><span class="badge ${c.status}">${statusLabel[c.status]}</span></td>
     <td class="mono">${c.date}</td>
     ${showActions ? `<td><button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();openDrawer('${c.id}')">詳情</button></td>` : ''}
@@ -997,6 +1375,7 @@ function renderCaseRow(c, showActions=false) {
 function initTables() {
   document.getElementById('recent-cases-body').innerHTML = cases.slice(0,5).map(c=>renderCaseRow(c)).join('');
   document.getElementById('all-cases-body').innerHTML = cases.map(c=>renderCaseRow(c,true)).join('');
+  updateDashboard();
 }
 
 function filterCases(q) {
@@ -1040,7 +1419,7 @@ function lookupTracer() {
     document.getElementById('f-flight').value = d.flight;
     document.getElementById('f-from').value = d.route.split('→')[0];
     document.getElementById('f-to').value = d.route.split('→')[1];
-    showToast('WORLD TRACER 資料已帶入','success');
+    addAudit('查詢並帶入 World Tracer',id); showToast('WORLD TRACER 資料已帶入','success');
   } else {
     result.classList.remove('visible');
     showToast('找不到此 WORLD TRACER 案件','error');
@@ -1060,7 +1439,7 @@ function lookupTracer2() {
     document.getElementById('tracer2-id').textContent = id;
     buildTracerHTML(tracerDB[id],'tracer-meta-2','tracer-timeline-2');
     result.classList.add('visible');
-    showToast('已找到 WORLD TRACER 紀錄','success');
+    addAudit('查詢 World Tracer 紀錄',id); showToast('已找到 WORLD TRACER 紀錄','success');
   } else {
     result.classList.remove('visible');
     showToast('查無此案件紀錄','error');
@@ -1082,7 +1461,7 @@ function handleFiles(files) {
     uploadedFiles.push(f);
     renderFileList();
   });
-  showToast(`已上傳 ${files.length} 份文件`,'success');
+  addAudit(`上傳 ${files.length} 份案件附件`); showToast(`已上傳 ${files.length} 份文件`,'success');
 }
 function renderFileList() {
   const list = document.getElementById('file-list');
@@ -1107,51 +1486,130 @@ function removeFile(i) {
 }
 
 // ── Compensation Rows ──
-function addCompRow() {
-  const id = Date.now();
+function currencyOptions(selected='TWD') {
+  return CURRENCY_CODES.map(code=>`<option value="${code}" ${code===selected?'selected':''}>${code}</option>`).join('');
+}
+function addCompRow(item={}) {
+  const id = Date.now() + compRows.length;
   compRows.push({id});
   const cont = document.getElementById('comp-rows');
   const div = document.createElement('div');
   div.className = 'comp-row'; div.id = 'row-'+id;
   div.innerHTML = `
-    <input type="text" placeholder="例：Samsonite 行李箱損壞" oninput="calcTotal()">
-    <input type="number" value="1" min="1" oninput="calcTotal()">
-    <input type="number" value="0" min="0" placeholder="金額" oninput="calcTotal()">
-    <div class="mono" id="sub-${id}" style="padding:8px 0;color:var(--text-2);font-family:var(--mono);">NT$ 0</div>
-    <button class="btn btn-danger" style="padding:5px 8px;" onclick="removeRow(${id})">✕</button>`;
+    <input class="comp-desc" type="text" value="${item.description || ''}" placeholder="例：行李箱損壞">
+    <input class="comp-qty" type="number" value="${item.quantity || 1}" min="1" step="1" oninput="calcTotal()">
+    <select class="comp-currency" onchange="calcTotal()">${currencyOptions(item.currency || 'TWD')}</select>
+    <input class="comp-price" type="number" value="${item.originalUnitPrice || 0}" min="0" step="any" placeholder="金額" oninput="calcTotal()">
+    <div class="comp-rate">1</div>
+    <div class="mono comp-subtotal" style="padding:8px 0;color:var(--text-2);">CNY 0</div>
+    <button class="btn btn-danger btn-icon" title="刪除項目" onclick="removeRow(${id})">×</button>`;
   cont.appendChild(div);
+  calcTotal();
 }
 function removeRow(id) {
-  document.getElementById('row-'+id).remove();
+  document.getElementById('row-'+id)?.remove();
   compRows = compRows.filter(r=>r.id!==id);
   calcTotal();
 }
 function calcTotal() {
   let total = 0;
   document.querySelectorAll('#comp-rows .comp-row').forEach(row => {
-    const inputs = row.querySelectorAll('input');
-    const qty = parseFloat(inputs[1]?.value)||0;
-    const price = parseFloat(inputs[2]?.value)||0;
-    const sub = qty * price;
+    const qty = parseFloat(row.querySelector('.comp-qty')?.value)||0;
+    const price = parseFloat(row.querySelector('.comp-price')?.value)||0;
+    const currency = row.querySelector('.comp-currency')?.value || 'TWD';
+    const rate = Number(fxRates[currency]?.twd) || 1;
+    const sub = qty * price * rate;
     total += sub;
-    const subEl = row.querySelector('[id^=sub-]');
-    if(subEl) subEl.textContent = 'NT$ '+sub.toLocaleString();
+    row.dataset.twdSubtotal = String(sub);
+    row.querySelector('.comp-rate').textContent = formatRate(rate);
+    row.querySelector('.comp-subtotal').textContent = formatDisplayMoney(sub);
   });
-  document.getElementById('comp-total').textContent = 'NT$ '+total.toLocaleString();
+  document.getElementById('comp-total').textContent = formatDisplayMoney(total);
 }
 
 // ── Submit / Draft ──
-function submitCase() {
-  if(!document.getElementById('f-name').value) {showToast('請填寫旅客姓名','error');return;}
-  showToast('案件已成功提交！案號：BC-2026-0048','success');
-  setTimeout(()=>navigate('cases',document.querySelectorAll('.nav-item')[1]),1200);
+function collectCompItems() {
+  return Array.from(document.querySelectorAll('#comp-rows .comp-row')).map(row => {
+    const currency = row.querySelector('.comp-currency')?.value || 'TWD';
+    const quantity = parseFloat(row.querySelector('.comp-qty')?.value) || 0;
+    const originalUnitPrice = parseFloat(row.querySelector('.comp-price')?.value) || 0;
+    const twdRate = Number(fxRates[currency]?.twd) || 1;
+    return {
+      description:row.querySelector('.comp-desc')?.value.trim() || '未命名項目',
+      quantity, currency, originalUnitPrice, twdRate,
+      subtotalTwd:Math.round(quantity * originalUnitPrice * twdRate)
+    };
+  }).filter(item=>item.originalUnitPrice > 0);
 }
-function saveDraft() { showToast('草稿已儲存','success'); }
+function readCompTotal() {
+  return collectCompItems().reduce((sum,item)=>sum+item.subtotalTwd,0);
+}
+function submitCase() {
+  if(currentRole !== 'agent') {showToast('請切換為地服人員後建立案件','error');return;}
+  const name = document.getElementById('f-name').value.trim();
+  if(!name) {showToast('請填寫旅客姓名','error');return;}
+  const tracer = document.getElementById('tracer-input').value.trim().toUpperCase() || 'MANUAL-' + Date.now().toString().slice(-6);
+  const from = document.getElementById('f-from').value.trim().toUpperCase() || 'TPE';
+  const to = document.getElementById('f-to').value.trim().toUpperCase() || 'TBD';
+  const newId = 'TPE-2026-' + String(Math.max(...cases.map(c => Number(c.id.split('-').at(-1)) || 0)) + 1).padStart(4,'0');
+  const docsComplete = Math.min(100, 28 + uploadedFiles.length * 14);
+  const compensationItems = collectCompItems();
+  const amount = compensationItems.reduce((sum,item)=>sum+item.subtotalTwd,0);
+  const newCase = {
+    id:newId, tracer, name, flight:document.getElementById('f-flight').value.trim() || '待確認',
+    route:from+'→'+to, type:document.getElementById('f-type').value, amount, status:'open',
+    date:document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
+    sourceStatus:'處理中', priority:amount >= 40000 ? '高' : '一般', owner:'目前使用者',
+    daysOpen:0, aiRisk:docsComplete < 70 ? '中' : '低', aiScore:docsComplete < 70 ? 48 : 18,
+    nextAction:docsComplete < 100 ? '補齊必要文件後送主管核准' : '送主管核准',
+    bagTag:tracerDB[tracer]?.tag || '待補',
+    compensationItems, fxRateDate
+  };
+  cases.unshift(newCase);
+  uploadedFiles.forEach(f => MOCK_DOCS.unshift({name:f.name,size:(f.size/1024/1024).toFixed(2)+' MB',type:f.type.includes('image')?'img':'pdf',case:newId,date:newCase.date,status:'已上傳'}));
+  addAudit('建立案件',newId);
+  persistCases(); initTables(); renderDocs(MOCK_DOCS); renderSettlement();
+  showToast(`案件已成功提交！案號：${newId}`,'success');
+  setTimeout(()=>navigate('cases',document.querySelectorAll('.nav-item')[1]),800);
+}
+function saveDraft() {
+  localStorage.setItem('airclaim-case-draft-v1', JSON.stringify({
+    name:document.getElementById('f-name').value,
+    tracer:document.getElementById('tracer-input').value,
+    compensationItems:collectCompItems(),
+    fxRateDate,
+    savedAt:new Date().toISOString()
+  }));
+  addAudit('儲存案件草稿');
+  showToast('草稿已儲存在此瀏覽器','success');
+}
 
 // ── Settlement list ──
+function approveCase(caseId) {
+  if(!['supervisor','finance'].includes(currentRole)) {
+    showToast('目前角色沒有核准權限','error'); return;
+  }
+  const c = cases.find(x => x.id === caseId);
+  if(!c) return;
+  c.status = 'closed'; c.sourceStatus = '已結案'; c.nextAction = '已歸檔';
+  addAudit('核准並結案',caseId);
+  persistCases(); initTables(); renderSettlement(); renderApprovalFlow(caseId);
+  showToast(`${caseId} 已核准並結案`,'success');
+}
+function returnCase(caseId) {
+  if(!['supervisor','finance'].includes(currentRole)) {
+    showToast('目前角色沒有退回權限','error'); return;
+  }
+  const c = cases.find(x => x.id === caseId);
+  if(!c) return;
+  c.status = 'open'; c.sourceStatus = '待補件'; c.nextAction = '補件後重新送審';
+  addAudit('退回補件',caseId);
+  persistCases(); initTables(); renderSettlement(); renderApprovalFlow(caseId);
+  showToast(`${caseId} 已退回補件`,'error');
+}
 function renderSettlement() {
   const pending = cases.filter(c=>c.status==='pending');
-  document.getElementById('settlement-list').innerHTML = pending.map(c=>`
+  document.getElementById('settlement-list').innerHTML = pending.length ? pending.map(c=>`
     <div class="settlement-step">
       <div class="step-info">
         <div class="step-name" style="display:flex;gap:12px;align-items:center;">
@@ -1161,12 +1619,15 @@ function renderSettlement() {
         </div>
         <div class="step-time">${c.tracer} · ${c.flight} · ${c.date}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:16px;color:var(--text-1);margin-right:12px;">NT$ ${c.amount.toLocaleString()}</div>
+      <div style="font-family:var(--mono);font-size:16px;color:var(--text-1);margin-right:12px;">${formatDisplayMoney(c.amount)}</div>
       <div style="display:flex;gap:6px;">
-        <button class="btn btn-green" style="font-size:11px;padding:5px 10px;" onclick="showToast('${c.id} 已核准','success')">核准</button>
-        <button class="btn btn-danger" style="font-size:11px;padding:5px 10px;" onclick="showToast('${c.id} 已退回','error')">退回</button>
+        ${['supervisor','finance'].includes(currentRole) ? `
+          <button class="btn btn-green" style="font-size:11px;padding:5px 10px;" onclick="approveCase('${c.id}')">核准</button>
+          <button class="btn btn-danger" style="font-size:11px;padding:5px 10px;" onclick="returnCase('${c.id}')">退回</button>
+        ` : '<span style="font-size:11px;color:var(--text-3);">僅場站領導／財務人員可決行</span>'}
       </div>
-    </div>`).join('');
+    </div>`).join('') : '<div style="padding:20px;color:var(--text-3);">目前沒有待審核案件。</div>';
+  renderApprovalFlow(pending[0]?.id || cases[0]?.id);
 }
 
 // ── Doc list ──
@@ -1190,39 +1651,72 @@ function renderDocs(docs) {
 function handleDocUpload(files) {
   Array.from(files).forEach(f => {
     const ext = f.name.split('.').pop().toLowerCase();
-    MOCK_DOCS.unshift({name:f.name,size:(f.size/1024/1024).toFixed(2)+' MB',type:ext==='pdf'?'pdf':'img',case:'未分配',date:new Date().toISOString().slice(0,10)});
+    MOCK_DOCS.unshift({name:f.name,size:(f.size/1024/1024).toFixed(2)+' MB',type:ext==='pdf'?'pdf':'img',case:'未分配',date:new Date().toISOString().slice(0,10),status:'已上傳'});
   });
+  addAudit(`上傳 ${files.length} 份文件`);
   renderDocs(MOCK_DOCS);
   showToast(`上傳 ${files.length} 份文件成功`,'success');
+  updateDashboard();
 }
 
 // ── Drawer ──
 function openDrawer(caseId) {
   const c = cases.find(x=>x.id===caseId);
   if(!c) return;
+  currentDrawerCaseId = caseId;
+  const docs = MOCK_DOCS.filter(d=>d.case===caseId);
+  const docRecords = AIRCLAIM_DATA.documents.filter(d=>d.case_id===caseId);
+  const auditRecords = [...localAuditLogs,...AIRCLAIM_DATA.audit_logs].filter(a=>a.case_id===caseId || a.case_id==='ALL').slice(0,6);
+  const ai = AIRCLAIM_DATA.ai_evaluations.find(a=>a.case_id===caseId);
   document.getElementById('drawer-title').textContent = c.id + ' · ' + c.name;
   document.getElementById('drawer-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       ${[['WORLD TRACER ID',`<span style="color:var(--accent);font-family:var(--mono)">${c.tracer}</span>`],
          ['航班',c.flight],['行程',c.route],['案件類型',typeLabel[c.type]],
          ['建立日期',c.date],['狀態','<span class="badge '+c.status+'">'+statusLabel[c.status]+'</span>'],
-         ['申請金額',`<span style="font-family:var(--mono);font-size:16px;color:var(--text-1);">NT$ ${c.amount.toLocaleString()}</span>`],
-         ['旅客姓名',c.name]
+         ['申請金額',`<span style="font-family:var(--mono);font-size:16px;color:var(--text-1);">${formatDisplayMoney(c.amount)}</span>`],
+         ['AI 風險',`${c.aiRisk || '低'} · ${c.aiScore || 0}`]
       ].map(([l,v])=>`<div><div style="font-size:10px;color:var(--text-3);font-family:var(--mono);margin-bottom:4px;">${l}</div><div style="font-size:13px;color:var(--text-1);">${v}</div></div>`).join('')}
     </div>
+    ${c.compensationItems?.length ? `
+      <hr>
+      <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">原幣賠償明細 · 匯率日期 ${c.fxRateDate || '未記錄'}</div>
+      ${c.compensationItems.map(item=>`
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;">
+          <span>${item.description} · ${item.quantity} × ${formatMoney(item.originalUnitPrice,item.currency)} · 匯率 ${formatRate(item.twdRate)}</span>
+          <span class="mono">${formatDisplayMoney(item.subtotalTwd)}</span>
+        </div>`).join('')}
+    ` : ''}
     <hr>
-    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">附件文件</div>
-    ${MOCK_DOCS.filter(d=>d.case===caseId).map(d=>`
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">AI 建議</div>
+    <div class="ai-hero">${ai?.summary || `${c.id} 目前為${c.sourceStatus || statusLabel[c.status]}，建議：${c.nextAction || '由承辦人持續追蹤'}。`}</div>
+    <hr>
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">必要文件檢核</div>
+    <div class="doc-checklist">
+      ${docRecords.length ? docRecords.map(d=>`
+        <div class="doc-check">
+          <span class="doc-check-name">${d.doc_name}</span>
+          <span class="doc-check-status" style="color:${d.status==='已上傳'?'var(--green)':'var(--red)'}">${d.status}</span>
+        </div>`).join('') : '<div style="font-size:12px;color:var(--text-3);">新建案件尚未設定文件清單</div>'}
+    </div>
+    <hr>
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">附件文件 · ${docs.length} 份</div>
+    ${docs.slice(0,8).map(d=>`
       <div class="file-item">
         <div class="file-icon ${d.type}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
-        <div class="file-name">${d.name}</div>
+        <div class="file-name">${d.docName || d.name}</div>
         <div class="file-size">${d.size}</div>
       </div>`).join('') || '<div style="font-size:12px;color:var(--text-3);">尚無附件</div>'}
     <hr>
-    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">備註</div>
-    <textarea placeholder="新增備註…" style="width:100%;min-height:80px;"></textarea>`;
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">操作軌跡</div>
+    ${auditRecords.map(a=>`<div style="font-size:11px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <span class="mono" style="color:var(--text-3)">${a.time}</span> · ${a.actor} · ${a.action}
+    </div>`).join('') || '<div style="font-size:12px;color:var(--text-3);">尚無操作紀錄</div>'}
+    <hr>
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">下一步</div>
+    <textarea style="width:100%;min-height:80px;">${c.nextAction || ''}</textarea>`;
   document.getElementById('drawer-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('drawer').classList.add('open'),10);
 }
@@ -1249,10 +1743,361 @@ function showToast(msg, type='success') {
   setTimeout(()=>{ div.classList.remove('show'); setTimeout(()=>div.remove(),350); }, 3200);
 }
 
+
+
+// ── AI / DATA / operating helpers ──
+const FX_KEY = 'airclaim-fx-rates-v1';
+const DISPLAY_CURRENCY_KEY = 'airclaim-display-currency-v1';
+const CURRENCY_CODES = ['TWD','CNY','USD','EUR','JPY','KRW','THB','SGD','HKD'];
+const CURRENCY_NAMES = {
+  TWD:'新台幣', CNY:'人民幣', USD:'美元', EUR:'歐元', JPY:'日圓',
+  KRW:'韓元', THB:'泰銖', SGD:'新加坡幣', HKD:'港幣'
+};
+const DEFAULT_FX_RATES = {
+  TWD:{twd:1}, CNY:{twd:4.48}, USD:{twd:32.40}, EUR:{twd:35.20},
+  JPY:{twd:0.217}, KRW:{twd:0.0235}, THB:{twd:0.91}, SGD:{twd:24.05}, HKD:{twd:4.14}
+};
+
+function loadFxConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FX_KEY) || 'null');
+    if(saved?.rates && CURRENCY_CODES.every(code=>Number(saved.rates[code]?.twd)>0)) return saved;
+  } catch (_) {}
+  return {rateDate:'2026-06-15',rates:structuredClone(DEFAULT_FX_RATES)};
+}
+
+let fxConfig = loadFxConfig();
+let fxRates = fxConfig.rates;
+let fxRateDate = fxConfig.rateDate;
+let displayCurrency = CURRENCY_CODES.includes(localStorage.getItem(DISPLAY_CURRENCY_KEY))
+  ? localStorage.getItem(DISPLAY_CURRENCY_KEY) : 'CNY';
+let currentDrawerCaseId = null;
+
+function formatRate(value) {
+  return Number(value).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:6});
+}
+
+function formatMoney(value, currency) {
+  return `${currency} ${Math.round(Number(value) || 0).toLocaleString('en-US')}`;
+}
+
+function convertTwd(twdAmount, currency=displayCurrency) {
+  const rate = Number(fxRates[currency]?.twd) || 1;
+  return Math.round((Number(twdAmount) || 0) / rate);
+}
+
+function formatDisplayMoney(twdAmount) {
+  return formatMoney(convertTwd(twdAmount),displayCurrency);
+}
+
+function renderDisplayCurrencySelectors() {
+  ['display-currency-desktop','display-currency-mobile'].forEach(id=>{
+    const select = document.getElementById(id);
+    if(!select) return;
+    select.innerHTML = CURRENCY_CODES.map(code=>`<option value="${code}">${code}</option>`).join('');
+    select.value = displayCurrency;
+    select.title = `顯示貨幣：${displayCurrency} ${CURRENCY_NAMES[displayCurrency]}`;
+  });
+}
+
+function refreshCurrencyDisplays() {
+  renderDisplayCurrencySelectors();
+  initTables();
+  renderSettlement();
+  calcTotal();
+  renderCurrencyPage();
+  if(currentDrawerCaseId && document.getElementById('drawer')?.classList.contains('open')) {
+    openDrawer(currentDrawerCaseId);
+  }
+}
+
+function setDisplayCurrency(currency) {
+  if(!CURRENCY_CODES.includes(currency)) return;
+  displayCurrency = currency;
+  localStorage.setItem(DISPLAY_CURRENCY_KEY,currency);
+  refreshCurrencyDisplays();
+  showToast(`顯示貨幣已切換為 ${currency}，金額已四捨五入`,'success');
+}
+
+function renderCurrencyPage() {
+  const from = document.getElementById('fx-from');
+  const to = document.getElementById('fx-to');
+  if(!from || !to) return;
+  const previousFrom = from.value || 'TWD';
+  const previousTo = to.value || displayCurrency;
+  from.innerHTML = currencyOptions(previousFrom);
+  to.innerHTML = currencyOptions(previousTo);
+  from.value = CURRENCY_CODES.includes(previousFrom) ? previousFrom : 'TWD';
+  to.value = CURRENCY_CODES.includes(previousTo) ? previousTo : displayCurrency;
+  document.getElementById('fx-rate-date').value = fxRateDate;
+  const editable = currentRole === 'finance';
+  document.getElementById('fx-rate-date').disabled = !editable;
+  document.getElementById('fx-save-button').disabled = !editable;
+  document.getElementById('fx-role-note').textContent = editable
+    ? '目前為財務人員角色，可修改匯率與參考日期。'
+    : `目前為${roleLabel[currentRole]}角色，可換算與查看；匯率由財務人員維護。`;
+  document.getElementById('fx-rate-body').innerHTML = CURRENCY_CODES.map(code=>`
+    <tr>
+      <td class="fx-code">${code}</td>
+      <td>${CURRENCY_NAMES[code]}</td>
+      <td><input type="number" min="0.000001" step="any" data-fx-code="${code}" value="${fxRates[code].twd}" ${editable && code!=='TWD'?'':'disabled'}></td>
+      <td>${code==='TWD'?'基準':editable?'可編輯':'唯讀'}</td>
+    </tr>`).join('');
+  calculateFx();
+}
+
+function calculateFx() {
+  const amount = Number(document.getElementById('fx-amount')?.value) || 0;
+  const from = document.getElementById('fx-from')?.value || 'USD';
+  const to = document.getElementById('fx-to')?.value || displayCurrency;
+  const fromRate = Number(fxRates[from]?.twd) || 1;
+  const toRate = Number(fxRates[to]?.twd) || 1;
+  const converted = amount * fromRate / toRate;
+  const result = document.getElementById('fx-result');
+  const meta = document.getElementById('fx-rate-text');
+  if(result) result.textContent = formatMoney(converted,to);
+  if(meta) meta.innerHTML = `1 ${from} = ${formatRate(fromRate/toRate)} ${to}<br>參考日期 ${fxRateDate}`;
+}
+
+function swapFxCurrencies() {
+  const from = document.getElementById('fx-from');
+  const to = document.getElementById('fx-to');
+  const oldFrom = from.value;
+  from.value = to.value;
+  to.value = oldFrom;
+  calculateFx();
+}
+
+function saveFxRates() {
+  if(currentRole !== 'finance') {
+    showToast('只有財務人員角色可以更新參考匯率','error'); return;
+  }
+  const nextRates = {};
+  for(const code of CURRENCY_CODES) {
+    const value = Number(document.querySelector(`[data-fx-code="${code}"]`)?.value);
+    if(!Number.isFinite(value) || value <= 0) {
+      showToast(`${code} 匯率必須大於 0`,'error'); return;
+    }
+    nextRates[code] = {twd:value};
+  }
+  nextRates.TWD = {twd:1};
+  fxRates = nextRates;
+  fxRateDate = document.getElementById('fx-rate-date').value || new Date().toISOString().slice(0,10);
+  fxConfig = {rateDate:fxRateDate,rates:fxRates};
+  localStorage.setItem(FX_KEY,JSON.stringify(fxConfig));
+  addAudit(`更新參考匯率（${fxRateDate}）`);
+  refreshCurrencyDisplays();
+  showToast('參考匯率已儲存，新的賠償明細會套用更新值','success');
+}
+
+function setRole(role) {
+  currentRole = role;
+  localStorage.setItem(ROLE_KEY,role);
+  addAudit(`切換工作角色：${roleLabel[role]}`);
+  updateDashboard();
+  renderSettlement();
+  renderDataPage();
+  renderCurrencyPage();
+  showToast(`已切換為${roleLabel[role]}`,'success');
+}
+
+function workItemsForRole() {
+  const active = cases.filter(c=>!['closed','rejected'].includes(c.status));
+  if(currentRole === 'supervisor') {
+    return active.filter(c=>c.status==='pending' || (c.aiScore||0)>=70)
+      .sort((a,b)=>(b.aiScore||0)-(a.aiScore||0));
+  }
+  if(currentRole === 'finance') {
+    return cases.filter(c=>c.status==='pending').sort((a,b)=>b.amount-a.amount);
+  }
+  if(currentRole === 'auditor') {
+    return [...cases].sort((a,b)=>(b.daysOpen||0)-(a.daysOpen||0));
+  }
+  return active.filter(c=>c.sourceStatus==='待補件' || c.sourceStatus==='逾期' || c.status==='open')
+    .sort((a,b)=>(b.daysOpen||0)-(a.daysOpen||0));
+}
+
+function renderWorkQueue() {
+  const queue = workItemsForRole();
+  const titleMap = {agent:'我的地服待辦',supervisor:'待核准與高風險',finance:'待財務處理',auditor:'稽核關注案件'};
+  const title = document.getElementById('work-queue-title');
+  const count = document.getElementById('work-queue-count');
+  const cont = document.getElementById('work-queue');
+  if(!cont) return;
+  title.textContent = titleMap[currentRole];
+  count.textContent = queue.length;
+  cont.innerHTML = queue.length ? queue.slice(0,3).map(c=>{
+    const severity = c.sourceStatus==='逾期' || (c.daysOpen||0)>30 || (c.aiScore||0)>=70 ? 'urgent' : c.status==='pending' ? 'warning' : 'normal';
+    return `<div class="work-item ${severity}">
+      <div class="work-item-title">${c.id} · ${c.name}</div>
+      <div class="work-item-meta">${c.sourceStatus || statusLabel[c.status]} · ${c.daysOpen||0} 天 · AI ${c.aiScore||0}<br>${c.nextAction||'持續追蹤'}</div>
+      <div class="work-item-action"><button class="btn btn-ghost" style="padding:4px 9px;" onclick="openDrawer('${c.id}')">開啟案件</button></div>
+    </div>`;
+  }).join('') : '<div style="padding:16px;color:var(--text-3);">目前沒有需要處理的案件。</div>';
+}
+
+function showWorkNotification() {
+  navigate('dashboard',document.querySelectorAll('.nav-item')[0]);
+  const count = workItemsForRole().length;
+  showToast(`${roleLabel[currentRole]}目前有 ${count} 件待辦`,'success');
+}
+
+function updateDashboard() {
+  const total = cases.length;
+  const closed = cases.filter(c=>c.status==='closed').length;
+  const pending = cases.filter(c=>c.status==='pending');
+  const open = cases.filter(c=>c.status!=='closed' && c.status!=='rejected');
+  const overdue = cases.filter(c=>c.status!=='closed' && (c.sourceStatus==='逾期' || (c.daysOpen||0)>30));
+  const pendingAmount = pending.reduce((sum,c)=>sum+c.amount,0);
+  const set = (id, value) => { const el=document.getElementById(id); if(el) el.innerHTML=value; };
+  set('nav-case-count', total);
+  set('nav-pending-count', pending.length);
+  set('sidebar-pending-amount', `${formatDisplayMoney(pendingAmount)} <span>${CURRENCY_NAMES[displayCurrency]}</span>`);
+  set('sidebar-open-count', `${open.length} <span>件</span>`);
+  set('case-management-count', `CASE MANAGEMENT · 共 ${total} 件`);
+  set('kpi-total', `${total} <span>件</span>`);
+  set('kpi-total-note', `案件主檔即時統計`);
+  set('kpi-closed', `${closed} <span>件</span>`);
+  set('kpi-close-rate', `${total ? Math.round(closed/total*100) : 0}% 結案率`);
+  set('kpi-pending-amount', `${formatDisplayMoney(pendingAmount)}`);
+  set('kpi-pending-note', `${pending.length} 件待批`);
+  set('kpi-overdue', `${overdue.length} <span>件</span>`);
+  set('ai-risk-badge', cases.filter(c=>(c.aiScore||0)>=70).length);
+  const roleSelect = document.getElementById('role-select');
+  if(roleSelect) roleSelect.value = currentRole;
+  renderDisplayCurrencySelectors();
+  renderWorkQueue();
+  updateReports();
+}
+
+function updateReports() {
+  const month = AIRCLAIM_DATA.monthly_kpis.at(-1);
+  const totalAmount = AIRCLAIM_DATA.monthly_kpis.reduce((sum,m)=>sum+m.settlement_twd,0);
+  const set = (id, value) => { const el=document.getElementById(id); if(el) el.innerHTML=value; };
+  set('report-amount', formatDisplayMoney(totalAmount));
+  set('report-paper-saved', `${month.paper_saved.toLocaleString()} <span>張</span>`);
+  set('report-hours-saved', `${month.hours_saved} <span>h</span>`);
+}
+
+function renderApprovalFlow(caseId) {
+  const c = cases.find(x=>x.id===caseId) || cases[0];
+  if(!c) return;
+  const source = AIRCLAIM_DATA.approvals.filter(a=>a.case_id===c.id);
+  const fallback = ['案件受理','文件審查','金額核算','主管核准','財務審閱','撥款','結案歸檔']
+    .map((name,i)=>({step_no:i+1,step_name:name,status:i < (c.status==='closed'?7:c.status==='pending'?4:2)?'完成':'等待'}));
+  const steps = source.length ? source : fallback;
+  document.getElementById('approval-flow-title').textContent = `${c.id} · 結算進度`;
+  document.getElementById('approval-flow').innerHTML = steps.map((s,i) => {
+    const done = s.status==='完成';
+    const active = !done && steps.slice(0,i).every(p=>p.status==='完成');
+    return `<div class="settlement-step">
+      <div class="step-num ${done?'done':active?'active':'todo'}">${done?'✓':active?'→':s.step_no}</div>
+      <div class="step-info"><div class="step-name">${s.step_name}</div><div class="step-time">${done?'已完成':active?'進行中':'待執行'}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAIPage() {
+  const select = document.getElementById('ai-case-select');
+  const current = select.value || cases[0]?.id;
+  select.innerHTML = cases.map(c=>`<option value="${c.id}" ${c.id===current?'selected':''}>${c.id} · ${c.name}</option>`).join('');
+  renderAIReview(select.value);
+  document.getElementById('ai-workflow-body').innerHTML = AIRCLAIM_DATA.workflow_steps.map(w=>`
+    <tr><td class="mono">${w.step}</td><td>${w.name}</td><td>${w.ai}</td><td>${w.paperless}</td></tr>`).join('');
+}
+
+function runAIReview() {
+  const caseId = document.getElementById('ai-case-select').value;
+  renderAIReview(caseId);
+  addAudit('執行 AI 案件檢核',caseId);
+  showToast('案件檢核已更新','success');
+}
+
+function renderAIReview(caseId) {
+  const c = cases.find(x=>x.id===caseId) || cases[0];
+  if(!c) return;
+  const ai = AIRCLAIM_DATA.ai_evaluations.find(a=>a.case_id===c.id);
+  const docs = AIRCLAIM_DATA.documents.filter(d=>d.case_id===c.id);
+  const completeness = ai?.doc_completeness ?? Math.round(100 * docs.filter(d=>d.status==='已上傳').length / Math.max(1,docs.length));
+  document.getElementById('ai-summary-text').textContent = ai?.summary || `${c.id} 為${typeLabel[c.type]}案件，目前${c.sourceStatus || statusLabel[c.status]}；AI 風險分數 ${c.aiScore || 0}，建議：${c.nextAction || '持續追蹤'}。`;
+  document.getElementById('ai-doc-score').textContent = `${completeness}%`;
+  document.getElementById('ai-duplicate-risk').textContent = ai?.duplicate_claim_risk || c.aiRisk || '低';
+  document.getElementById('ai-photo-check').textContent = ai?.photo_authenticity || '待人工確認';
+  document.getElementById('ai-policy-cap').textContent = ai?.policy_cap || (c.amount>=45000?'接近上限':'正常');
+  document.getElementById('ai-risk-meter').style.width = `${Math.min(100,c.aiScore||0)}%`;
+  const actions = [
+    c.nextAction || ai?.suggested_action || '由承辦人持續追蹤',
+    completeness < 100 ? '文件尚未完整，系統維持結算硬擋' : '必要文件齊全，可進入下一階段',
+    (c.aiScore||0)>=70 ? '高風險案件需主管人工覆核' : 'AI 未發現重大異常'
+  ];
+  document.getElementById('ai-action-list').innerHTML = actions.map((a,i)=>`
+    <div class="action-item"><div class="action-num">${i+1}</div><div style="font-size:12px;line-height:1.6;">${a}</div></div>`).join('');
+}
+
+function renderDataPage() {
+  const setText = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setText('data-case-count', cases.length);
+  setText('data-doc-count', AIRCLAIM_DATA.documents.length);
+  setText('data-approval-count', AIRCLAIM_DATA.approvals.length);
+  setText('data-ai-count', AIRCLAIM_DATA.ai_evaluations.length);
+  const schema = [
+    ['案件主檔','建立跨部門唯一案件編號，避免同一案件出現多份版本。'],
+    ['文件保險箱','追蹤護照、機票、照片、收據是否齊全，避免未補件就送結算。'],
+    ['電子簽核軌跡','記錄主管與財務每一關的時間、角色與結果，取代紙本跑簽。'],
+    ['財務結算資料','保留原幣單價、匯率日期、使用匯率、TWD 小計與上限檢查，方便核帳與月報。'],
+    ['AI 判讀依據','保留文件完整度、風險分數、照片檢核及建議理由，避免黑箱。'],
+    ['管理指標','由同一份案件資料產生結案率、逾期、省工與金額趨勢。'],
+    ['World Tracer 紀錄','保存帶入資料與最新追蹤事件，減少重複輸入。'],
+    ['操作紀錄','知道誰、何時、對哪個案件執行了什麼動作，支援稽核追溯。']
+  ];
+  document.getElementById('schema-list').innerHTML = schema.map(s=>`
+    <div class="schema-item"><div class="schema-name">${s[0]}</div><div class="schema-desc">${s[1]}</div></div>`).join('');
+  document.getElementById('data-preview-body').innerHTML = cases.slice(0,8).map(c=>`
+    <tr onclick="openDrawer('${c.id}')"><td class="mono primary">${c.id}</td><td class="mono">${c.tracer}</td><td>${c.name}</td>
+    <td><span class="badge ${c.status}">${statusLabel[c.status]}</span></td><td>${c.aiRisk||'低'} · ${c.aiScore||0}</td><td>${c.nextAction||''}</td></tr>`).join('');
+  const logs = [...localAuditLogs,...AIRCLAIM_DATA.audit_logs].slice(0,12);
+  document.getElementById('audit-log-list').innerHTML = logs.map(l=>`
+    <div class="audit-row"><span class="audit-time">${l.time}</span><span>${l.actor}</span><span>${l.action}</span><span class="mono">${l.case_id}</span></div>
+  `).join('');
+}
+
+function downloadFile(name, content, type) {
+  const url = URL.createObjectURL(new Blob([content],{type}));
+  const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function exportDatabase() {
+  addAudit('匯出完整資料 JSON');
+  const output = {
+    ...AIRCLAIM_DATA, cases,
+    exchange_rates:{base:'TWD',rate_date:fxRateDate,rates:fxRates},
+    display_currency:displayCurrency,
+    audit_logs:[...localAuditLogs,...AIRCLAIM_DATA.audit_logs],
+    exported_at:new Date().toISOString()
+  };
+  downloadFile('airclaim_database_export.json', JSON.stringify(output,null,2), 'application/json;charset=utf-8');
+  showToast('完整資料 JSON 已匯出','success');
+}
+
+function exportCasesCSV() {
+  const headers = ['case_id','tracer_id','passenger','flight','route','type','amount_twd','status','date','ai_risk','ai_score','next_action'];
+  const csv = [headers.join(','),...cases.map(c=>[
+    c.id,c.tracer,c.name,c.flight,c.route,typeLabel[c.type],c.amount,statusLabel[c.status],c.date,c.aiRisk||'',c.aiScore||0,c.nextAction||''
+  ].map(v=>`"${String(v).replaceAll('"','""')}"`).join(','))].join('\r\n');
+  addAudit('匯出案件 CSV');
+  downloadFile('airclaim_cases_export.csv','\ufeff'+csv,'text/csv;charset=utf-8');
+  showToast('案件 CSV 已匯出','success');
+}
+
 // ── Init ──
+renderDisplayCurrencySelectors();
 initTables();
 renderSettlement();
 renderDocs(MOCK_DOCS);
+renderDataPage();
+renderAIPage();
+renderCurrencyPage();
 addCompRow();
 
 // Set today's date
